@@ -1,18 +1,23 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for, session, flash
+from flask import Flask, render_template, jsonify, request, redirect, url_for, flash, make_response
 import requests
 from bs4 import BeautifulSoup
 from pymongo import MongoClient  # pymongo를 임포트 하기(패키지 인스톨 먼저 해야겠죠?)
+
+# 로그인 관련 라이브러리
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import *
+import datetime
+from functools import wraps
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = '아무거나'
 
 client = MongoClient('localhost', 27017)  # mongoDB는 27017 포트로 돌아갑니다.
 db = client.dbjungle  # 'dbjungle'라는 이름의 db를 만들거나 사용합니다.
 
-
-@app.route('/')
-def home():
-    return render_template('index.html')
+# @app.route('/')
+# def home():
+#     return render_template('home.html')
 
 
 @app.route('/memo', methods=['POST'])
@@ -51,77 +56,81 @@ def read_articles():
     # 2. articles라는 키 값으로 article 정보 보내주기
     return jsonify({'result': 'success', 'articles': result})
 
+
+##### 로그인 구현 #####
+
 # 세션 데이터를 암호화하기 위한 비밀 키 설정
-app.secret_key = 'supersecretkey'
+app.secret_key = 'secretkey'
 
 # 가상의 사용자 데이터베이스
-users = {}
+users = db.users
 
-# 홈 페이지 라우트 정의
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.cookies.get('token')
+        if not token:
+            flash('Token is missing!')
+            return redirect(url_for('login'))
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            current_user = users.find_one({'username': data['username']})
+        except:
+            flash('Token is invalid!')
+            return redirect(url_for('login'))
+        return f(current_user, *args, **kwargs)
+    return decorated
+
 @app.route('/')
 def home():
-    # 세션에 'username'이 있으면 로그인된 사용자로 환영 메시지를 표시
-    if 'username' in session:
-        return render_template('home.html', username=session['username'])
-    # 세션에 'username'이 없으면 로그인되지 않은 상태로 홈 페이지 표시
     return render_template('home.html')
 
-# 로그인 페이지 라우트 정의
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # 폼 데이터에서 사용자 이름과 비밀번호 가져오기
         username = request.form['username']
         password = request.form['password']
-        # 사용자 데이터베이스에서 사용자 이름으로 사용자 검색
-        user = users.get(username)
+        user = users.find_one({'username': username})
         
-        # 사용자가 존재하고 비밀번호가 일치하면
         if user and check_password_hash(user['password'], password):
-            # 세션에 사용자 이름 저장
-            session['username'] = username
-            # 홈 페이지로 리다이렉션
-            return redirect(url_for('home'))
+            token = jwt.encode({
+                'username': username,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
+            }, app.config['SECRET_KEY'], algorithm="HS256")
+            response = make_response(redirect(url_for('index')))
+            response.set_cookie('token', token)
+            return response
         else:
-            # 로그인 실패 시 플래시 메시지 표시
             flash('Invalid username or password')
     
-    # 로그인 페이지 템플릿 렌더링
     return render_template('login.html')
 
-# 회원가입 페이지 라우트 정의
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # 폼 데이터에서 사용자 이름과 비밀번호 가져오기
         username = request.form['username']
         password = request.form['password']
         
-        # 사용자 이름이 이미 존재하면
-        if username in users:
-            # 사용자 이름 중복 플래시 메시지 표시
+        if users.find_one({'username': username}):
             flash('Username already exists')
         else:
-            # 비밀번호 해시 생성
             hashed_password = generate_password_hash(password, method='sha256')
-            # 사용자 데이터베이스에 사용자 추가
-            users[username] = {'password': hashed_password}
-            # 회원가입 성공 플래시 메시지 표시
+            users.insert_one({'username': username, 'password': hashed_password})
             flash('User registered successfully')
-            # 로그인 페이지로 리다이렉션
             return redirect(url_for('login'))
     
-    # 회원가입 페이지 템플릿 렌더링
     return render_template('register.html')
 
-# 로그아웃 라우트 정의
 @app.route('/logout')
 def logout():
-    # 세션에서 사용자 이름 제거
-    session.pop('username', None)
-    # 홈 페이지로 리다이렉션
-    return redirect(url_for('home'))
+    response = make_response(redirect(url_for('login')))
+    response.delete_cookie('token')
+    return response
 
+@app.route('/index')
+@token_required
+def index(current_user):
+    return render_template('index.html', username=current_user['username'])
 
 if __name__ == '__main__':
-    app.run('0.0.0.0', port=5001, debug=True)
+    app.run(debug=True)
