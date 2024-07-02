@@ -15,13 +15,5 @@
     
     <input type="submit" value="회원가입">
   </form>
-
-  {% with messages = get_flashed_messages() %}
-  {% if messages %}
-  <script>
-    alert("{{messages[-1]}}")
-  </script>
-  {% endif %}
-  {% endwith %}
 </body>
 </html>

@@ -104,10 +104,10 @@ def login_post():
         )
         response = make_response(redirect(url_for('home')))
         response.set_cookie('token', token)
-        flash('로그인 성공')
+        print('로그인 성공')
         return response
     else:
-        flash('계정 정보가 서버에 없습니다')
+        print('계정 정보가 서버에 없습니다')
         return redirect(url_for('login_get'))
 
 # 회원가입
@@ -122,16 +122,16 @@ def register_post():
     password = request.form['password']
 
     if username not in names:
-        flash('이름이 잘못되었습니다')
+        print('이름이 잘못되었습니다')
         return redirect(url_for('login_get'))    
     elif users.find_one({'username': username}):
-        flash('같은 이름의 사용자가 이미 존재합니다')
+        print('같은 이름의 사용자가 이미 존재합니다')
         return redirect(url_for('login_get'))
     else:
         # 비밀번호 해싱 후 db에 저장
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
         users.insert_one({'username': username, 'password': hashed_password})
-        flash('유저 정보를 성공적으로 저장했습니다')
+        print('유저 정보를 성공적으로 저장했습니다')
         return redirect(url_for('login_get'))
     
 # 로그아웃
