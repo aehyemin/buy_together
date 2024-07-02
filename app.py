@@ -7,6 +7,7 @@ from pymongo import MongoClient  # pymongo를 임포트 하기(패키지 인스�
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import *
 import datetime
+import jwt
 from functools import wraps
 
 app = Flask(__name__)
@@ -63,27 +64,35 @@ def token_required(f):
     def decorated(*args, **kwargs):
         token = request.cookies.get('token')
         if not token:
-            flash('토큰이 없습니다')
+            print('토큰이 없습니다')
             return redirect(url_for('login_get'))
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             current_user = users.find_one({'username': data['username']})
         except:
-            flash('틀린 토큰입니다')
+            print('틀린 토큰입니다')
             return redirect(url_for('login_get'))
         return f(current_user, *args, **kwargs)
     return decorated
 
 # 홈
 @app.route('/')
-@token_required # 토큰이 있는지 (로그인 돼있는지 확인)
 def start():
-    return render_template('index.html')
+    # 토큰이 있는지 확인 (로그인 돼있는지 확인)
+    token = request.cookies.get('token')
+    if token:
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            # 토큰이 유효한 경우에만 index.html로 리디렉션
+            return render_template('home')
+        except:
+            pass
+    # 토큰이 없거나 유효하지 않으면 로그인 페이지
+    return render_template('login.html')
 
-# @app.route('/index')
-# @token_required
-# def index(current_user):
-#     return render_template('index.html', username=current_user['username'])
+@app.route('/home')
+def home():
+    return render_template('index.html')
 
 # 로그인
 @app.route('/login', methods=['GET'])
@@ -92,20 +101,25 @@ def login_get():
 
 @app.route('/login', methods=['POST'])
 def login_post():
+    # 폼에서 유저네임, 비밀번호 받기
     username = request.form['username']
     password = request.form['password']
+
+    # db에서 유저 찾기
     user = users.find_one({'username': username})
     
+    # 유저가 있고 비밀번호가 맞으면 토큰 생성
     if user and check_password_hash(user['password'], password):
         token = jwt.encode({
             'username': username,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
         }, app.config['SECRET_KEY'], algorithm="HS256")
-        response = make_response(redirect(url_for('index')))
+        response = make_response(redirect(url_for('home')))
         response.set_cookie('token', token)
+        print('로그인 성공')
         return response
     else:
-        flash('Invalid username or password')
+        print('계정 정보가 서버에 없습니다')
+        return redirect(url_for('login_get'))
 
 # 회원가입
 @app.route('/register', methods=['GET'])
@@ -118,20 +132,22 @@ def register_post():
     password = request.form['password']
     
     if users.find_one({'username': username}):
-        flash('Username already exists')
+        print('같은 이름의 사용자가 이미 존재합니다')
     else:
-        hashed_password = generate_password_hash(password, method='sha256')
+        # 비밀번호 해싱 후 db에 저장
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
         users.insert_one({'username': username, 'password': hashed_password})
-        flash('User registered successfully')
-        return redirect(url_for('login'))
+        print('유저 정보를 성공적으로 저장했습니다')
+        return redirect(url_for('login_get'))
     
 # 로그아웃
 @app.route('/logout')
 def logout():
-    response = make_response(redirect(url_for('login')))
+    response = make_response(redirect(url_for('login_get')))
     response.delete_cookie('token')
     return response
 
 # 앱 실행
 if __name__ == '__main__':
     app.run(debug=True)
+

@@ -1,42 +1,64 @@
-from flask import Flask, render_template
-from flask_jwt_extended import *
+from flask import Flask
+from flask import jsonify
+from flask import request
+from flask import render_template
 
-application = Flask(import_name = __name__)
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
 
-application.config.update(
-  JWT_SECRET_KEY = 'super-secret'
-)
+from pymongo import MongoClient 
 
-jwt = JWTManager(application)
+# app = Flask(__name__)
 
-admin_id = "1234"
-admin_pw = "qwer"
+# # Setup the Flask-JWT-Extended extension
+# app.config["JWT_SECRET_KEY"] = "secret"
+# jwt = JWTManager(app)
 
-@application.route("/")
-def test_test():
-  return render_template('home.html')
+# @app.route("/")
+# def home():
+#   return render_template("home.html")
 
-@application.route("/login", methods=['POST'])
-def login_proc():
+# @app.route("/login", methods=["POST"])
+# def login():
+#   username = request.json.get("username", None)
+#   password = request.json.get("password", None)
+#   if username != "test" or password != "test":
+#     return jsonify({"msg": "Bad username or password"}), 401
+  
+#   access_token = create_access_token(identity=username)
+#   return jsonify(access_token=access_token)
 
-  # 클라이언트로부터 요청된 값
-  input_data = request.get_json()
-  user_id = input_data['id']
-  user_pw = input_data['pw']
+# @app.route("/protected", methods=["GET"])
+# @jwt_required()
+# def protected():
+#   current_user = get_jwt_identity()
+#   return jsonify(logged_in_as=current_user), 200
 
-  # 아이디, 비밀번호가 일치하는 경우
-  if(user_id == admin_id and
-     user_pw == admin_pw):
-    return jsonify(
-      result = "success",
-      # 검증된 경우, access 토큰 반화
-      access_token = create_access_token(identity = user_id,
-                                         expires_delta = False)
-    )
-  else:
-    return jsonify(
-      result = "Invalid Params!"
-    )
+# if __name__ == "__main__":
+#   app.run()
 
-if __name__ == "__main__":
-  application.run()
+client = MongoClient('localhost', 27017)  # mongoDB는 27017 포트로 돌아갑니다.
+db = client.dbjungle  # 'dbjungle'라는 이름의 db를 만들거나 사용합니다.
+users = db.users # 유저 DB
+
+try:
+    # MongoDB 클라이언트 설정
+    client = MongoClient('localhost', 27017)
+    client.server_info()  # 연결이 유효한지 확인
+    print("MongoDB 클라이언트 설정 및 연결 확인 완료")
+
+    # 데이터베이스와 컬렉션 선택
+    db = client.dbjungle
+    users = db.users
+    print("데이터베이스와 컬렉션 선택 완료")
+
+    # 모든 사용자 문서 찾기
+    all_users = list(users.find({}))
+    print("모든 사용자 문서 찾기 완료")
+
+    # 모든 사용자 문서 출력
+    print(all_users)
+except Exception as e:
+    print(f"오류 발생: {e}")
