@@ -1,7 +1,7 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, flash, make_response, g
 import requests
 from bs4 import BeautifulSoup
-from pymongo import MongoClient
+from pymongo import MongoClient  # pymongo를 임포트 하기(패키지 인스톨 먼저 해야겠죠?)
 
 # 로그인 관련 라이브러리
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -58,15 +58,6 @@ def read_articles():
 
 ##### 로그인, 회원가입 구현 #####
 
-names = [
-    "고태환", "김경은", "김민경", "김민석", "김민호", "김태현", "김성희", "김슬아",
-    "박시원", "박인성", "배지훈", "백승우", "서장우", "윤종성", "이동연", "이승민",
-    "이재석", "정유정", "정휘건", "진재웅", "최자영", "최재원", "최주혁", "하혜민",
-    "황준용", "염종인", "김해강", "박하연", "김예람", "윤민성", "정현우", "지창근",
-    "김영후", "김용성", "임채승", "강경임", "최정우", "박건우", "이동희", "김욱현",
-    "조형욱", "정재욱", "이승현", "정소연", "김태민", "서현승", "엄윤준"
-]
-
 app.secret_key = 'secretkey' # 비밀 키
 users = db.users # 유저 DB
 
@@ -120,11 +111,8 @@ def register_post():
     # 유저가 보낸 정보 받기
     username = request.form['username']
     password = request.form['password']
-
-    if username not in names:
-        print('이름이 잘못되었습니다')
-        return redirect(url_for('login_get'))    
-    elif users.find_one({'username': username}):
+    
+    if users.find_one({'username': username}):
         print('같은 이름의 사용자가 이미 존재합니다')
         return redirect(url_for('login_get'))
     else:
@@ -145,7 +133,7 @@ def logout():
 @app.route('/reset')
 def reset():
     users.delete_many({})
-    return redirect(url_for('login_get'))
+    return '초기화 완료'
 
 # 앱 실행
 if __name__ == '__main__':
