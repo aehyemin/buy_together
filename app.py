@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for, flash, make_response
+from flask import Flask, render_template, jsonify, request, redirect, url_for, flash, make_response, g
 import requests
 from bs4 import BeautifulSoup
 from pymongo import MongoClient  # pymongo를 임포트 하기(패키지 인스톨 먼저 해야겠죠?)
@@ -59,38 +59,37 @@ def read_articles():
 app.secret_key = 'secretkey' # 비밀 키
 users = db.users # 유저 DB
 
+# JWT 토큰 확인 데코레이터
 def token_required(f):
     @wraps(f)
-    def decorated(*args, **kwargs):
+    def decorated_function(*args, **kwargs):
         token = request.cookies.get('token')
         if not token:
-            print('토큰이 없습니다')
+            flash('토큰이 없습니다')
             return redirect(url_for('login_get'))
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            current_user = users.find_one({'username': data['username']})
-        except:
-            print('틀린 토큰입니다')
+            g.current_user = users.find_one({'username': data['username']})
+            if not g.current_user:
+                flash('유효하지 않은 사용자입니다.')
+                return redirect(url_for('login_get'))
+        except jwt.ExpiredSignatureError:
+            flash('토큰이 만료되었습니다. 다시 로그인 해주세요.')
             return redirect(url_for('login_get'))
-        return f(current_user, *args, **kwargs)
-    return decorated
+        except jwt.InvalidTokenError:
+            flash('틀린 토큰입니다.')
+            return redirect(url_for('login_get'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # 홈
 @app.route('/')
+@token_required
 def start():
-    # 토큰이 있는지 확인 (로그인 돼있는지 확인)
-    token = request.cookies.get('token')
-    if token:
-        try:
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            # 토큰이 유효한 경우에만 index.html로 리디렉션
-            return render_template('home')
-        except:
-            pass
-    # 토큰이 없거나 유효하지 않으면 로그인 페이지
     return render_template('login.html')
 
 @app.route('/home')
+@token_required
 def home():
     return render_template('index.html')
 
@@ -134,6 +133,7 @@ def register_post():
     
     if users.find_one({'username': username}):
         print('같은 이름의 사용자가 이미 존재합니다')
+        return redirect(url_for('login_get'))
     else:
         # 비밀번호 해싱 후 db에 저장
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
