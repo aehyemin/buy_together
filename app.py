@@ -128,6 +128,7 @@ def register_get():
 
 @app.route('/register', methods=['POST'])
 def register_post():
+    # 유저가 보낸 정보 받기
     username = request.form['username']
     password = request.form['password']
     
@@ -146,6 +147,12 @@ def logout():
     response = make_response(redirect(url_for('login_get')))
     response.delete_cookie('token')
     return response
+
+# 계정정보 리셋
+@app.route('/reset')
+def reset():
+    users.delete_many({})
+    return '초기화 완료'
 
 # 앱 실행
 if __name__ == '__main__':
