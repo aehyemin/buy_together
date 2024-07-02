@@ -1,7 +1,7 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, flash, make_response, g
 import requests
 from bs4 import BeautifulSoup
-from pymongo import MongoClient  # pymongo를 임포트 하기(패키지 인스톨 먼저 해야겠죠?)
+from pymongo import MongoClient
 
 # 로그인 관련 라이브러리
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -15,8 +15,6 @@ app.config['SECRET_KEY'] = '아무거나'
 
 client = MongoClient('localhost', 27017)  # mongoDB는 27017 포트로 돌아갑니다.
 db = client.dbjungle  # 'dbjungle'라는 이름의 db를 만들거나 사용합니다.
-
-jwt = JWTManager(app)
 
 
 @app.route('/memo', methods=['POST'])
@@ -58,20 +56,51 @@ def read_articles():
 
 ##### 로그인, 회원가입 구현 #####
 
+names = [
+    "고태환", "김경은", "김민경", "김민석", "김민호", "김태현", "김성희", "김슬아",
+    "박시원", "박인성", "배지훈", "백승우", "서장우", "윤종성", "이동연", "이승민",
+    "이재석", "정유정", "정휘건", "진재웅", "최자영", "최재원", "최주혁", "하혜민",
+    "황준용", "염종인", "김해강", "박하연", "김예람", "윤민성", "정현우", "지창근",
+    "김영후", "김용성", "임채승", "강경임", "최정우", "박건우", "이동희", "김욱현",
+    "조형욱", "정재욱", "이승현", "정소연", "김태민", "서현승", "엄윤준"
+]
+
 app.secret_key = 'secretkey' # 비밀 키
 users = db.users # 유저 DB
 
+# JWT 토큰 확인 데코레이터
+def token_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = request.cookies.get('token')
+        if not token:
+            flash('토큰이 없습니다')
+            return redirect(url_for('login_get'))
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            g.current_user = users.find_one({'username': data['username']})
+            if not g.current_user:
+                flash('유효하지 않은 사용자입니다.')
+                return redirect(url_for('login_get'))
+        except jwt.ExpiredSignatureError:
+            flash('토큰이 만료되었습니다. 다시 로그인 해주세요.')
+            return redirect(url_for('login_get'))
+        except jwt.InvalidTokenError:
+            flash('틀린 토큰입니다.')
+            return redirect(url_for('login_get'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 # 홈
 @app.route('/')
-@jwt_required
+@token_required
 def start():
     return render_template('login.html')
 
 @app.route('/home')
-@jwt_required
+@token_required
 def home():
-    current_user = get_jwt_identity()
-    return render_template('index.html', username=current_user)
+    return render_template('index.html')
 
 # 로그인
 @app.route('/login', methods=['GET'])
@@ -89,10 +118,9 @@ def login_post():
     
     # 유저가 있고 비밀번호가 맞으면 토큰 생성
     if user and check_password_hash(user['password'], password):
-        token = create_access_token(
-            identity=username,
-            # expires_delta=datetime.timedelta(days=1)
-        )
+        token = jwt.encode({
+            'username': username,
+        }, app.config['SECRET_KEY'], algorithm="HS256")
         response = make_response(redirect(url_for('home')))
         response.set_cookie('token', token)
         print('로그인 성공')
@@ -111,16 +139,11 @@ def register_post():
     # 유저가 보낸 정보 받기
     username = request.form['username']
     password = request.form['password']
-<<<<<<< HEAD
-    
-    if users.find_one({'username': username}):
-=======
 
     if username not in names:
         print('이름이 잘못되었습니다')
         return redirect(url_for('login_get'))    
     elif users.find_one({'username': username}):
->>>>>>> parent of 197f4e4 (오류 알림창)
         print('같은 이름의 사용자가 이미 존재합니다')
         return redirect(url_for('login_get'))
     else:
@@ -141,7 +164,7 @@ def logout():
 @app.route('/reset')
 def reset():
     users.delete_many({})
-    return '초기화 완료'
+    return redirect(url_for('login_get'))
 
 # 앱 실행
 if __name__ == '__main__':
