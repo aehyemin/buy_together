@@ -6,6 +6,19 @@
   <title>Document</title>
 </head>
 <body>
+
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var messages = {{ messages | tojson | safe
+    }};
+    alert(messages.join('\n'));
+          });
+  </script>
+  {% endif %}
+  {% endwith %}
+
   <div class="container">
     <h1>로그인</h1>
     <form action="/login" method="POST">
@@ -21,12 +34,5 @@
   <br>
   <button onclick="location.href='register'">회원가입</button>
 
-  {% with messages = get_flashed_messages() %}
-  {% if messages %}
-  <script>
-    alert("{{messages[-1]}}")
-  </script>
-  {% endif %}
-  {% endwith %}
 </body>
 </html>
