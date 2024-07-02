@@ -94,12 +94,12 @@
                     data: {},
                     success: function (response) {
                         let informations = response["informations"];
-                    
+                        console.log(informations);
                         for (let i = 0; i < informations.length; i++) {
                             makeCard(informations[i]["image"], informations[i]["url"], informations[i]["title"], informations[i]["price"],informations[i]["comment"]);
                         }
                      //   console.log(informations)
-             
+                        console.log(informations)
                         
                     }
                 })

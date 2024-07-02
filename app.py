@@ -33,13 +33,14 @@ def post_memo():
 
     # 2. meta tag를 스크래핑하기
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36'}
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36', "Accept-Language": "ko-KR,ko;q=0.8,en-US;q=0.5,en;q=0.3"}
     data = requests.get(url_receive, headers=headers)
     soup = BeautifulSoup(data.text, 'html.parser')
 
     og_image = soup.select_one('meta[property="og:image"]')
     og_title = soup.select_one('meta[property="og:title"]')
-    og_price = soup.select_one('span.total-price > strong')
+    og_price = soup.select_one('span.total-price > strong').get_text()
+    print(og_price)
 
         # print(og_image)
         # print(og_title)
