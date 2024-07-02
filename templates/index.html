@@ -26,42 +26,15 @@
 
         <title>같이사자 !</title>
 
-<!-- 
+
         </style>
         <script>
             $(document).ready(function () {
                 $("#cards-box").html("");
-
-                showMemo();
-=======
                 showProducts();
 
             });
 
-            function showProducts() {
-                $.ajax({
-                    type: "GET",
-                    url: "/product",
-                    data: {},
-                    success: function (response) {
-                        let products = response["products"];
-                        for (let i = 0; i < products.length; i++) {
-                            makeCard(products[i]["url"], products[i]["comment"]);
-                        }
-                    }
-                })
-            }
-
-            function makeCard(url, comment) {
-                let tempHtml = `<div class="max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-                        <div class="card-body">
-                            <a href="${url}" target="_blank" class="card-title">이름</a>
-                            <p class="card-text comment">${comment}</p>
-                        </div>
-                    </div>`;
-                $("#cards-box").append(tempHtml);
-
-            }
 
             function openClose() {
                 // id 값 post-box의 display 값이 block 이면(= 눈에 보이면)
@@ -79,41 +52,10 @@
             }
 
 
-            function postMemo() {
-                let url = $("#post-url").val();
-                let comment = $("#post-comment").val();
-=======
-            function postProducts() {
-                let url = $("#url").val();
-                let end = $("#end").val();
-                let min = $("#min").val();
-                let max = $("#max").val();
-                let account = $("#account").val();
-                let comment = $("#comment").val();
-
-
-                // 2. memo에 POST 방식으로 메모 생성 요청하기
-                $.ajax({
-                    type: "POST", // POST 방식으로 요청하겠다.
-                    url: "/product", // /memo라는 url에 요청하겠다.
-                    data: {url_give: url, end_give: end, min_give: min, max_give: max, account_give: account, comment_give: comment}, // 데이터를 주는 방법
-                    success: function (response) { // 성공하면
-                        if (response["result"] == "success") {
-                            alert("등록 성공!");
-                            // 3. 성공 시 페이지 새로고침하기
-                            window.location.reload();
-                        } else {
-                            alert("서버 오류!")
-                        }
-                    }
-                })
-            }
-
-
-            function showMemo() {
+            function showProducts() {
                 $.ajax({
                     type: "GET",
-                    url: "/memo",
+                    url: "/product",
                     data: {},
                     success: function (response) {
                         let informations = response["informations"];
@@ -140,78 +82,41 @@
                 $("#cards-box").append(tempHtml);
 
             }
-=======
+
+
+
+            function postProducts() {
+                let url = $("#url").val();
+                let end = $("#end").val();
+                let min = $("#min").val();
+                let max = $("#max").val();
+                let account = $("#account").val();
+                let comment = $("#comment").val();
+
+
+                // 2. memo에 POST 방식으로 메모 생성 요청하기
+                $.ajax({
+                    type: "POST", // POST 방식으로 요청하겠다.
+                    url: "/product", // /memo라는 url에 요청하겠다.
+                    data: {url_give: url, end_give: end, min_give: min, max_give: max, account_give: account, comment_give: comment}, // 데이터를 주는 방법
+                    success: function (response) { // 성공하면
+                        if (response["result"] == "success") {
+                            alert("등록 성공!");
+                            // 3. 성공 시 페이지 새로고침하기
+                            window.location.reload();
+                        } else {
+                            alert("서버 오류!")
+                        }
+                    }
+                })
+            }
 
         </script>
     </head>
 
+
     <body>
         <div class="wrap">
-
-            <div class="jumbotron">
-                <h1 class="display-4">같이 사자 !</h1>
-                <p class="lead">소제목 입력해주세요</p>
-                <hr class="my-4">
-                <p class="lead">
-                    <button onclick="openClose()" id="btn-post-box" type="button" class="btn btn-primary">포스팅 박스 열기
-                    </button>
-                </p>
-            </div>
-            <div id="post-box" class="form-post" style="display:none">
-                <div>
-                    <div class="form-group">
-                        <label for="post-url">상품 URL</label>
-                        <input id="post-url" class="form-control" placeholder="">
-                    </div>
-                    <div class="form-group">
-                        <label for="post-comment">간단 코멘트</label>
-                        <textarea id="post-comment" class="form-control" rows="2"></textarea>
-                    </div>
-                    <button type="button" class="btn btn-primary" onclick="postMemo()">기사저장</button>
-                </div>
-            </div>
-            <div id="cards-box" class="card-columns">
-                <div class="card">
-                    <img class="card-img-top"
-                         src="https://www.eurail.com/content/dam/images/eurail/Italy%20OCP%20Promo%20Block.adaptive.767.1535627244182.jpg"
-                         alt="Card image cap">
-                    <div class="card-body">
-                        <a href="#" class="card-title">여기 기사 제목이 들어가죠</a>
-                        <p class="card-text">기사의 요약 내용이 들어갑니다. 동해물과 백두산이 마르고 닳도록 하느님이 보우하사 우리나라만세 무궁화 삼천리 화려강산...</p>
-                        <p class="card-text comment">여기에 코멘트가 들어갑니다.</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <img class="card-img-top"
-                         src="https://www.eurail.com/content/dam/images/eurail/Italy%20OCP%20Promo%20Block.adaptive.767.1535627244182.jpg"
-                         alt="Card image cap">
-                    <div class="card-body">
-                        <a href="#" class="card-title">여기 기사 제목이 들어가죠</a>
-                        <p class="card-text">기사의 요약 내용이 들어갑니다. 동해물과 백두산이 마르고 닳도록 하느님이 보우하사 우리나라만세 무궁화 삼천리 화려강산...</p>
-                        <p class="card-text comment">여기에 코멘트가 들어갑니다.</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <img class="card-img-top"
-                         src="https://www.eurail.com/content/dam/images/eurail/Italy%20OCP%20Promo%20Block.adaptive.767.1535627244182.jpg"
-                         alt="Card image cap">
-                    <div class="card-body">
-                        <a href="#" class="card-title">여기 기사 제목이 들어가죠</a>
-                        <p class="card-text">기사의 요약 내용이 들어갑니다. 동해물과 백두산이 마르고 닳도록 하느님이 보우하사 우리나라만세 무궁화 삼천리 화려강산...</p>
-                        <p class="card-text comment">여기에 코멘트가 들어갑니다.</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <img class="card-img-top"
-                         src="https://www.eurail.com/content/dam/images/eurail/Italy%20OCP%20Promo%20Block.adaptive.767.1535627244182.jpg"
-                         alt="Card image cap">
-                    <div class="card-body">
-                        <a href="#" class="card-title">여기 기사 제목이 들어가죠</a>
-                        <p class="card-text">기사의 요약 내용이 들어갑니다. 동해물과 백두산이 마르고 닳도록 하느님이 보우하사 우리나라만세 무궁화 삼천리 화려강산...</p>
-                        <p class="card-text comment">여기에 코멘트가 들어갑니다.</p>
-                    </div>
-=======
-
             <button type="button" onclick="" class="fixed top-5 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
                 로그아웃</button>
 
@@ -222,7 +127,6 @@
                     <a href="#" onclick="openClose()" id="btn-post-box" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
                         +
                     </a> 
-
                 </div>
                 <hr class="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700">
                 <!-- show&hide -->
@@ -273,4 +177,4 @@
             </div>
         </div>
         
-    </body> -->
+    </body>
