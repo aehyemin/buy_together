@@ -64,10 +64,9 @@
                         <p class="card-text price">${price}</p>
                         <p class="card-text comment">코멘트 : ${comment}</p>
                         <p class="card-text min_to_max">모집인원 : ${min}명 ~ ${max}명</p>
-                        <p class="card-text join_to_max">참여중인원 : ${join_len}/${max}</p>
+                        <p class="card-text join_to_max">참여중인원 : <a href=# onclick="alert('${join}')">${join_len}</a>/${max}</p>
                         <p class="card-text end">마감시간 : ${end}</p>
                         <p class="card-text account">은행 계좌 : ${account}</p>
-                        <p class="card-text join">참여중 : ${join}</p>
                         <button class="apply-button">버튼</button>
                         </div>
                     </div>`;
