@@ -44,26 +44,34 @@
                         let informations = response["informations"];
                         console.log(informations);
                         for (let i = 0; i < informations.length; i++) {
-                            makeCard(informations[i]["image"], informations[i]["url"], informations[i]["title"], informations[i]["price"],informations[i]["comment"]);
+                            makeCard(informations[i]["image"], informations[i]["url"],
+                                    informations[i]["title"], informations[i]["price"],
+                                    informations[i]["comment"], informations[i]["min"],
+                                    informations[i]["max"], informations[i]["end"],
+                                    informations[i]["account"], informations[i]["join"]);
                         }
                      //   console.log(informations)
                         console.log(informations)
-                        
                     }
                 })
             }
-
-            function makeCard(image, url, title, price, comment) {
+            function makeCard(image, url, title, price, comment, min, max, end, account, join) {
+                let join_len = join.length
                 let tempHtml = `<div class="card">
                         <img class="card-img-top" src="${image}" alt="Card image cap">
                         <div class="card-body">
                         <a href="${url}" target="_blank" class="card-title">${title}</a>
-                        <p class="card-text">${price}</p>
-                        <p class="card-text comment">${comment}</p>
+                        <p class="card-text price">${price}</p>
+                        <p class="card-text comment">코멘트 : ${comment}</p>
+                        <p class="card-text min_to_max">모집인원 : ${min}명 ~ ${max}명</p>
+                        <p class="card-text join_to_max">참여중인원 : ${join_len}/${max}</p>
+                        <p class="card-text end">마감시간 : ${end}</p>
+                        <p class="card-text account">은행 계좌 : ${account}</p>
+                        <p class="card-text join">참여중 : ${join}</p>
+                        <button class="apply-button">버튼</button>
                         </div>
                     </div>`;
                 $("#cards-box").append(tempHtml);
-
             }
 
             function openClose() {
@@ -106,13 +114,14 @@
                     }
                 })
             }
+
         </script>
     </head>
 
 
     <body>
         <div class="wrap">
-            <button type="button" onclick="" class="fixed top-5 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
+            <button type="button" onclick="location.href='logout'" class="fixed top-5 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
                 로그아웃</button>
 
             <!-- 새등록 -->
