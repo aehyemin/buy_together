@@ -45,23 +45,21 @@
             function showProducts() {
                 $.ajax({
                     type: "GET",
-                    url: "/memo",
+                    url: "/product",
                     data: {},
                     success: function (response) {
-                        let articles = response["articles"];
-                        for (let i = 0; i < articles.length; i++) {
-                            makeCard(articles[i]["image"], articles[i]["url"], articles[i]["title"], articles[i]["desc"], articles[i]["comment"]);
+                        let products = response["products"];
+                        for (let i = 0; i < products.length; i++) {
+                            makeCard(products[i]["url"], products[i]["comment"]);
                         }
                     }
                 })
             }
 
-            function makeCard(image, url, title, desc, comment) {
+            function makeCard(url, comment) {
                 let tempHtml = `<div class="max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-                        <img class="card-img-top" src="${image}" alt="Card image cap">
                         <div class="card-body">
-                            <a href="${url}" target="_blank" class="card-title">${title}</a>
-                            <p class="card-text">${desc}</p>
+                            <a href="${url}" target="_blank" class="card-title">이름</a>
                             <p class="card-text comment">${comment}</p>
                         </div>
                     </div>`;
@@ -85,17 +83,21 @@
             }
 
             function postProducts() {
-                let url = $("#post-url").val();
-                let comment = $("#post-comment").val();
+                let url = $("#url").val();
+                let end = $("#end").val();
+                let min = $("#min").val();
+                let max = $("#max").val();
+                let account = $("#account").val();
+                let comment = $("#comment").val();
 
                 // 2. memo에 POST 방식으로 메모 생성 요청하기
                 $.ajax({
                     type: "POST", // POST 방식으로 요청하겠다.
-                    url: "/memo", // /memo라는 url에 요청하겠다.
-                    data: {url_give: url, comment_give: comment}, // 데이터를 주는 방법
+                    url: "/product", // /memo라는 url에 요청하겠다.
+                    data: {url_give: url, end_give: end, min_give: min, max_give: max, account_give: account, comment_give: comment}, // 데이터를 주는 방법
                     success: function (response) { // 성공하면
                         if (response["result"] == "success") {
-                            alert("포스팅 성공!");
+                            alert("등록 성공!");
                             // 3. 성공 시 페이지 새로고침하기
                             window.location.reload();
                         } else {
@@ -130,8 +132,8 @@
                             <input type="url" name="url" id="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="" />
                         </div>
                         <div>
-                            <label for="datetime" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">종료시간</label>
-                            <input type="datetime-local" id="datetime" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="" />
+                            <label for="end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">종료시간</label>
+                            <input type="datetime-local" id="end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="" />
                         </div>
                         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <div>
@@ -144,12 +146,12 @@
                             </div>
                         </div>
                         <div>
-                            <label for="bankaccount" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">계좌번호</label>
-                            <input type="text" id="bankaccount" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="" />
+                            <label for="account" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">계좌번호</label>
+                            <input type="text" id="account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="" />
                         </div>
                         <div>
-                            <label for="message" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">간단 코멘트</label>
-                            <textarea id="message" rows="2" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder=""></textarea>
+                            <label for="comment" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">간단 코멘트</label>
+                            <textarea id="comment" rows="2" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder=""></textarea>
                         </div>
     
                         <button type="button" onclick="postProducts()" class="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
