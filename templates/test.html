@@ -19,13 +19,13 @@
         <!-- 구글폰트 -->
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap" rel="stylesheet">
 
+        <!-- tailwindcss -->
         <link href="{{url_for('static',filename='css/output.css')}}" rel="stylesheet">
 
-        <title>같이 사자 !</title>
+        <title>같이사자 !</title>
 
         <!-- style -->
         <style type="text/css">
-
             * {
                 font-family: "Noto Sans KR", sans-serif;
             }
@@ -35,62 +35,14 @@
                 margin: auto;
             }
 
-            .comment {
-                color: blue;
-                font-weight: bold;
-            }
-
-            /* #post-box {
-                width: 500px;
-                margin: 20px auto;
-                padding: 50px;
-                border: black solid;
-                border-radius: 5px;
-            } */
         </style>
         <script>
             $(document).ready(function () {
                 $("#cards-box").html("");
-                showArticles();
+                showProducts();
             });
 
-            function openClose() {
-                // id 값 post-box의 display 값이 block 이면(= 눈에 보이면)
-                if ($("#post-box").css("display") == "block") {
-                    // post-box를 가리고
-                    $("#post-box").hide();
-                    // 다시 버튼을 클릭하면, 박스 열기를 할 수 있게 텍스트 바꿔두기
-                    $("#btn-post-box").text("+");
-                } else {
-                    // 아니면(눈에 보이지 않으면) post-box를 펴라
-                    $("#post-box").show();
-                    // 다시 버튼을 클릭하면, 박스 닫기를 할 수 있게 텍스트 바꿔두기
-                    $("#btn-post-box").text("닫기");
-                }
-            }
-
-            function postArticle() {
-                let url = $("#post-url").val();
-                let comment = $("#post-comment").val();
-
-                // 2. memo에 POST 방식으로 메모 생성 요청하기
-                $.ajax({
-                    type: "POST", // POST 방식으로 요청하겠다.
-                    url: "/memo", // /memo라는 url에 요청하겠다.
-                    data: {url_give: url, comment_give: comment}, // 데이터를 주는 방법
-                    success: function (response) { // 성공하면
-                        if (response["result"] == "success") {
-                            alert("포스팅 성공!");
-                            // 3. 성공 시 페이지 새로고침하기
-                            window.location.reload();
-                        } else {
-                            alert("서버 오류!")
-                        }
-                    }
-                })
-            }
-
-            function showArticles() {
+            function showProducts() {
                 $.ajax({
                     type: "GET",
                     url: "/memo",
@@ -116,22 +68,50 @@
                 $("#cards-box").append(tempHtml);
 
             }
-        </script>
 
+            function openClose() {
+                // id 값 post-box의 display 값이 block 이면(= 눈에 보이면)
+                if ($("#post-box").css("display") == "block") {
+                    // post-box를 가리고
+                    $("#post-box").hide();
+                    // 다시 버튼을 클릭하면, 박스 열기를 할 수 있게 텍스트 바꿔두기
+                    $("#btn-post-box").text("+");
+                } else {
+                    // 아니면(눈에 보이지 않으면) post-box를 펴라
+                    $("#post-box").show();
+                    // 다시 버튼을 클릭하면, 박스 닫기를 할 수 있게 텍스트 바꿔두기
+                    $("#btn-post-box").text("닫기");
+                }
+            }
+
+            function postProducts() {
+                let url = $("#post-url").val();
+                let comment = $("#post-comment").val();
+
+                // 2. memo에 POST 방식으로 메모 생성 요청하기
+                $.ajax({
+                    type: "POST", // POST 방식으로 요청하겠다.
+                    url: "/memo", // /memo라는 url에 요청하겠다.
+                    data: {url_give: url, comment_give: comment}, // 데이터를 주는 방법
+                    success: function (response) { // 성공하면
+                        if (response["result"] == "success") {
+                            alert("포스팅 성공!");
+                            // 3. 성공 시 페이지 새로고침하기
+                            window.location.reload();
+                        } else {
+                            alert("서버 오류!")
+                        }
+                    }
+                })
+            }
+        </script>
     </head>
 
     <body>
         <div class="wrap">
-            
-            <!-- <hr class="h-px my-8 border-0 dark:bg-gray-700"> -->
-            <!-- <div class="relative flex flex-col overflow-hidden p-1 sm:p-12">
-                <h1 class="text-3xl font-bold">참여중</h1>
-                <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700">
-            </div> -->
-
-            <button type="button" onclick=""  class="fixed top-5 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
+            <button type="button" onclick="" class="fixed top-5 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
                 로그아웃</button>
-            
+
             <!-- 새등록 -->
             <div class="relative flex flex-col overflow-hidden p-1 sm:p-6">
                 <div class="flex items-center justify-between mb-4">
@@ -141,7 +121,7 @@
                     </a> 
                 </div>
                 <hr class="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700">
-                
+                <!-- show&hide -->
                 <div id="post-box" style="display:none" class="w-full p-4  bg-white border border-gray-200 rounded-lg shadow sm:p-8 dark:bg-gray-800 dark:border-gray-700">
                     <form class="space-y-3" action="#">
                         <h4>모집 정보를 입력해주세요</h4>
@@ -163,7 +143,6 @@
                                 <input type="number" id="max" data-input-counter class="flex-shrink-0 text-gray-900 dark:text-white border-0 bg-transparent text-sm font-normal focus:outline-none focus:ring-0 max-w-[2.5rem] text-center" placeholder="" value="5" required />
                             </div>
                         </div>
-                        
                         <div>
                             <label for="bankaccount" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">계좌번호</label>
                             <input type="text" id="bankaccount" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="" />
@@ -173,21 +152,21 @@
                             <textarea id="message" rows="2" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder=""></textarea>
                         </div>
     
-                        <button type="button" onclick="postArticle()" class="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
+                        <button type="button" onclick="postProducts()" class="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
                             등록하기</button>
                     </form>
                 </div>
             </div>
-            
+
             <!-- 모집중 -->
             <div class="relative flex flex-col overflow-hidden p-1 sm:p-6">
                 <h1 class="text-3xl font-bold">모집중</h1>
                 <hr class="h-px my-8  bg-gray-200 border-0 dark:bg-gray-700">
+                <!-- 등록 상품 list -->
                 <div id="cards-box" class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+
                 </div>
             </div>
-            
         </div>
+        
     </body>
-
-</html>

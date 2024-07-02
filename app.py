@@ -11,7 +11,7 @@ db = client.dbjungle  # 'dbjungle'라는 이름의 db를 만들거나 사용합�
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('test.html')
 
 
 @app.route('/memo', methods=['POST'])

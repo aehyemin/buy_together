@@ -2,10 +2,12 @@
 module.exports = {
   content: ["./templates/*.{html,js}"],
   theme: {
-    extend: {},
-    container: {
-      ceter: true,
-    }
+    extend: {
+      margin: {
+        '5px': '5px',
+      }
+    },
+    
   },
   plugins: [],
 }
