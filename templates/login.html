@@ -20,5 +20,13 @@
   </div>
   <br>
   <button onclick="location.href='register'">회원가입</button>
+
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <script>
+    alert("{{messages[-1]}}")
+  </script>
+  {% endif %}
+  {% endwith %}
 </body>
 </html>
