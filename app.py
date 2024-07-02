@@ -102,7 +102,6 @@ def token_required(f):
     def decorated_function(*args, **kwargs):
         token = request.cookies.get('token')
         if not token:
-            flash('토큰이 없습니다')
             return redirect(url_for('login_get'))
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
