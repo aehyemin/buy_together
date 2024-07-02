@@ -123,7 +123,6 @@ def login_post():
         }, app.config['SECRET_KEY'], algorithm="HS256")
         response = make_response(redirect(url_for('home')))
         response.set_cookie('token', token)
-        flash('로그인 성공')
         return response
     else:
         flash('계정 정보가 서버에 없습니다')
