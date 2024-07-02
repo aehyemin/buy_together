@@ -13,8 +13,6 @@ db = client.coupang  # 라는 이름의 db를 만들거나 사용합니다.
 def home():
     return render_template('index.html')
 
-
-
 #데이터 조회
 @app.route('/product', methods=['GET'])
 def read_product():
@@ -70,7 +68,6 @@ def post_product():
     # 3. mongoDB에 데이터를 넣기
     db.informations.insert_one(informations)
     return jsonify({'result': 'success'})
-
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5001, debug=True)
