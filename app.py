@@ -16,6 +16,8 @@ app.config['SECRET_KEY'] = '아무거나'
 client = MongoClient('localhost', 27017)  # mongoDB는 27017 포트로 돌아갑니다.
 db = client.dbjungle  # 'dbjungle'라는 이름의 db를 만들거나 사용합니다.
 
+jwt = JWTManager(app)
+
 
 @app.route('/memo', methods=['POST'])
 def post_article():
@@ -68,39 +70,17 @@ names = [
 app.secret_key = 'secretkey' # 비밀 키
 users = db.users # 유저 DB
 
-# JWT 토큰 확인 데코레이터
-def token_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        token = request.cookies.get('token')
-        if not token:
-            flash('토큰이 없습니다')
-            return redirect(url_for('login_get'))
-        try:
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            g.current_user = users.find_one({'username': data['username']})
-            if not g.current_user:
-                flash('유효하지 않은 사용자입니다.')
-                return redirect(url_for('login_get'))
-        except jwt.ExpiredSignatureError:
-            flash('토큰이 만료되었습니다. 다시 로그인 해주세요.')
-            return redirect(url_for('login_get'))
-        except jwt.InvalidTokenError:
-            flash('틀린 토큰입니다.')
-            return redirect(url_for('login_get'))
-        return f(*args, **kwargs)
-    return decorated_function
-
 # 홈
 @app.route('/')
-@token_required
+@jwt_required
 def start():
     return render_template('login.html')
 
 @app.route('/home')
-@token_required
+@jwt_required
 def home():
-    return render_template('index.html')
+    current_user = get_jwt_identity()
+    return render_template('index.html', username=current_user)
 
 # 로그인
 @app.route('/login', methods=['GET'])
@@ -118,9 +98,10 @@ def login_post():
     
     # 유저가 있고 비밀번호가 맞으면 토큰 생성
     if user and check_password_hash(user['password'], password):
-        token = jwt.encode({
-            'username': username,
-        }, app.config['SECRET_KEY'], algorithm="HS256")
+        token = create_access_token(
+            identity=username,
+            # expires_delta=datetime.timedelta(days=1)
+        )
         response = make_response(redirect(url_for('home')))
         response.set_cookie('token', token)
         flash('로그인 성공')
