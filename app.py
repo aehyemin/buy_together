@@ -2,13 +2,15 @@ from flask import Flask, render_template, jsonify, request, redirect, url_for, f
 import requests
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
-
+from bson.objectid import ObjectId
+import json
 # 로그인 관련 라이브러리
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import *
 import datetime
 import jwt
 from functools import wraps
+from flask.json.provider import JSONProvider
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '아무거나'
@@ -16,6 +18,7 @@ app.config['SECRET_KEY'] = '아무거나'
 client = MongoClient('localhost', 27017)  # mongoDB는 27017 포트로 돌아갑니다.
 db = client.coupang  # 라는 이름의 db를 만들거나 사용합니다.
 
+<<<<<<< HEAD
 @app.route('/test', methods=['GET'])
 def test_product():
     # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
@@ -34,11 +37,37 @@ def test_product():
     db.informations.insert_one(test_data)
     # db.informations.delete_one({'comment':'동해물'})
     return jsonify({'result': 'success'})
+=======
+##########################################################################
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
+
+
+class CustomJSONProvider(JSONProvider):
+    def dumps(self, obj, **kwargs):
+        return json.dumps(obj, **kwargs, cls=CustomJSONEncoder)
+
+    def loads(self, s, **kwargs):
+        return json.loads(s, **kwargs)
+
+app.json = CustomJSONProvider(app)
+
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return 'Internal Server Error: {}'.format(error), 500
+
+
+>>>>>>> wepScraping
 
 #데이터 조회
 @app.route('/product', methods=['GET'])
 def read_product():
     # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
+<<<<<<< HEAD
     token = request.cookies.get('token')
     data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
     current_user = data['username']
@@ -48,6 +77,10 @@ def read_product():
     sorted_info = [join_ing,join_will]
   
     return jsonify({'result': 'success', 'informations': sorted_info})
+=======
+    informations = list(db.informations.find({}))
+    return jsonify({'result': 'success', 'informations': informations})
+>>>>>>> wepScraping
 
 #데이터 생성
 @app.route('/product', methods=['POST'])
@@ -92,13 +125,130 @@ def post_product():
                     'end': end_receive,
 
                     'account': account_receive,
-                    'join': user_list}
+                    'join': user_list,
+                    }
     
     # 3. mongoDB에 데이터를 넣기
     db.informations.insert_one(informations)
     return jsonify({'result': 'success'})
 
 
+<<<<<<< HEAD
+=======
+# @app.route('/memo', methods=['GET'])
+# def read_articles():
+#     # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
+#     result = list(db.articles.find({}, {'_id': 0}))
+#     # 2. articles라는 키 값으로 article 정보 보내주기
+#     return jsonify({'result': 'success', 'articles': result})
+
+
+
+#참여
+@app.route('/apply', methods=['POST'])
+def product_apply():
+    id = request.form['product_id']
+    max = int(request.form['max'])
+    # userlist = request.form['userlist']
+    product = db.informations.find_one({'_id':ObjectId(id)})
+
+    user_list = product["join"]
+
+    token = request.cookies.get('token')
+    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+    current_user = data['username']
+    # user_list = [current_user]
+    user_list.append(current_user)
+
+    if len(user_list) > max:
+        return jsonify({'result': 'failure'})
+    else:
+        db.informations.update_one({'_id':ObjectId(id)}, {'$set':{'join':user_list}})
+        return jsonify({'result': 'success'})
+    
+    
+    
+
+
+    # if product:
+    #     current_join = product['join']
+    #     if current_user not in current_join:
+    #         current_join.append(username)
+    #         db.informations.update_one({'_id':ObjectId(id)}, {'$set':{'join':current_join}})
+    #         return jsonify({'result': 'success'})
+    #     else:
+    #         return jsonify({'result': 'fail'})
+
+@app.route('/canceljoin', methods=['POST'])
+def cancel_join():
+    id = request.form['product_id']
+    userlist = request.form['userlist']
+    product = db.informations.find_one({'_id':ObjectId(id)})
+
+    token = request.cookies.get('token')
+    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+    current_user = data['username']
+    # user_list = [current_user]
+    print(current_user)
+    user_list = product['join']
+    print(user_list)
+    user_list.remove(current_user)
+    print(user_list)
+
+
+
+    db.informations.update_one({'_id':ObjectId(id)}, {'$set':{'join':user_list}})
+    return jsonify({'result': 'success'})
+
+
+
+    # userlist = request.form['userlist']
+    # token = request.cookies.get('token')
+    # data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+    # current_user = data['username']
+    # user_list = [current_user]
+    # if product:
+    #     join_list = product['join']
+    #     if current_user in join_list:
+    #         join_list.remove(userlist)
+    #         db.informations.update_one({'_id':ObjectId(id)}, {'$set': {'join': join_list}})
+    #         return jsonify({'result': 'success', 'cancelJoin': join_list})
+
+@app.route('/test', methods=["GET"])
+def test_product():
+    # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
+    test_data = {'url':'url',
+                    'title':'title',
+                    'price': 100000,
+                    'image': 'image',
+                    'comment':'comment_receive',
+                    'min': 2,
+                    'max': 5,
+                    'end': '2022.02.03',
+                    'account': 9454833935,
+                    'join': ['김정글', '김코딩', '김파이','김민경']}
+    db.informations.insert_one(test_data)
+    # db.informations.delete_one({'comment':'동해물'})
+    return jsonify({'result': 'success'})
+
+
+#취소
+@app.route('/cancel', methods=["POST"])
+def product_cancel():
+    id = request.form['product_id']
+    
+    db.informations.delete_one({'_id':ObjectId(id)})
+
+
+
+
+
+
+
+
+
+
+>>>>>>> wepScraping
 ##### 로그인, 회원가입 구현 #####
 
 names = [
@@ -213,4 +363,3 @@ def reset():
 # 앱 실행
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5001, debug=True)
-
