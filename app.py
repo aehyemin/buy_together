@@ -12,10 +12,12 @@ import jwt
 from functools import wraps
 from flask.json.provider import JSONProvider
 
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '아무거나'
 
-client = MongoClient('localhost', 27017)  # mongoDB는 27017 포트로 돌아갑니다.
+# client = MongoClient('localhost', 27017)  # mongoDB는 27017 포트로 돌아갑니다.
+client = MongoClient('mongodb://0701:0701@3.38.252.109',27017)
 db = client.coupang  # 라는 이름의 db를 만들거나 사용합니다.
 
 names = [
@@ -31,92 +33,45 @@ names = [
 def test_product():
     # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
     
-    token = request.cookies.get('token')
-    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-    current_user = data['username']
-
     test_data = {'url':'url',
                 'title':'title',
-                'price': '33900',
+                'price': 100000,
                 'image': 'image',
                 'comment':'comment_receive',
                 'min': 2,
                 'max': 5,
                 'end': '2024.09.03',
-                'account': '9454833935',
-                'join': ['김정글', '김코딩', '김파이','김물병','김EOd'],
-                'register' : '김정글'}
-    
-    db.informations.insert_one(test_data)
-    # db.informations.delete_many({})
-    return jsonify({'result': 'success'})
-
-##########################################################################
-class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, ObjectId):
-            return str(o)
-        return json.JSONEncoder.default(self, o)
-
-
-class CustomJSONProvider(JSONProvider):
-    def dumps(self, obj, **kwargs):
-        return json.dumps(obj, **kwargs, cls=CustomJSONEncoder)
-
-    def loads(self, s, **kwargs):
-        return json.loads(s, **kwargs)
-
-app.json = CustomJSONProvider(app)
-
-
-@app.errorhandler(500)
-def internal_server_error(error):
-    return 'Internal Server Error: {}'.format(error), 500
-
-
-
-
-##########################################################################
-class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, ObjectId):
-            return str(o)
-        return json.JSONEncoder.default(self, o)
-
-
-class CustomJSONProvider(JSONProvider):
-    def dumps(self, obj, **kwargs):
-        return json.dumps(obj, **kwargs, cls=CustomJSONEncoder)
-
-    def loads(self, s, **kwargs):
-        return json.loads(s, **kwargs)
-
-app.json = CustomJSONProvider(app)
-
-
-@app.errorhandler(500)
-def internal_server_error(error):
-    return 'Internal Server Error: {}'.format(error), 500
-
-
-@app.route('/test', methods=['GET'])
-def test_product():
-    # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
-    
-    test_data = {'url':'url',
-                    'title':'title',
-                    'price': 100000,
-                    'image': 'image',
-                    'comment':'comment_receive',
-                    'min': 2,
-                    'max': 5,
-                    'end': '2022.02.03',
-                    'account': 9454833935,
-                    'join': ['김정글', '김코딩', '김파이','김민경']}
+                'account': 9454833935,
+                'join': ['김정글', '김코딩', '김파이','김물병'],
+                'creator': '김정글'}
     
     db.informations.insert_one(test_data)
     # db.informations.delete_one({'comment':'동해물'})
     return jsonify({'result': 'success'})
+
+##########################################################################
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
+
+
+class CustomJSONProvider(JSONProvider):
+    def dumps(self, obj, **kwargs):
+        return json.dumps(obj, **kwargs, cls=CustomJSONEncoder)
+
+    def loads(self, s, **kwargs):
+        return json.loads(s, **kwargs)
+
+app.json = CustomJSONProvider(app)
+
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return 'Internal Server Error: {}'.format(error), 500
+
+
 
 #데이터 조회
 @app.route('/product', methods=['GET'])
@@ -132,81 +87,10 @@ def read_product():
   
     return jsonify({'result': 'success', 'informations': sorted_info})
 
-@app.route('/makeCard', methods=['POST'])
-def make_card():
-
-    token = request.cookies.get('token')
-    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-    current_user = data['username']
-
-    id = request.form['id_give']
-    mark = int(request.form['mark_give'])
-    product = db.informations.find_one({'_id':ObjectId(id)})
-
-    image =product['image']
-    url = product['url']
-    title = product['title']
-    price = product['price']
-    comment = product['comment']
-    min = product['min']
-    max = product['max']
-    end = product['end']
-    account = product['account']
-    join = product['join']
-    register = product['register']
-
-    tempHtml = """
-    <div class="relative h-auto max-w-full bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-    """
-    if mark == 0:
-        tempHtml += """
-        <div class="absolute top-0 left-0 m-4 text-white bg-blue-700 px-4 py-2 rounded">참여중</div>
-        """
-        if register == current_user:
-            tempHtml += f"""
-            <button onclick="cancelProduct('{id}')" class="absolute top-0 right-0 m-4 text-white bg-blue-700 px-4 py-2 rounded">X</button>
-            """
-
-    tempHtml += f"""
-        <img class="h-auto w-full rounded-lg" src="{image}" alt="Card image cap">
-        <div class="p-3">
-            <a href="{url}" target="_blank" class="card-title" id="{id}">{title}</a>
-            <p class="card-text price" id="{id}">{price}</p>
-            <p class="card-text min_to_max" id="{id}">모집인원 : {min}명 ~ {max}명</p>
-            <p class="card-text join_to_max" id="{id}">참여중인원 : <a href=# onclick="alert({join})">{len(join)}</a>/{max}</p>
-            <p class="card-text end" id="{id}">마감시간 : {end}</p>
-            <p class="card-text account" id="{id}">은행 계좌 : {account}</p>
-            <p class="card-text comment" id="{id}">코멘트 : {comment}</p>"""
-
-    # 참여 안 함
-    if mark == 1:  
-        if len(join) == max:
-            tempHtml += f"""
-                    <button id="{id}-button" class="absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">인원마감</button>
-                </div>
-            </div>
-            """
-        else:
-            tempHtml += f"""
-                    <button id="{id}-button" onclick="applyJoin('{id}', {join}, '{max}')" class="apply-button absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">참여</button>
-                </div>
-            </div>
-            """
-        
-    # 참여함
-    else:
-        tempHtml += f"""
-            </div>
-            <button id="{id}-button" onclick="cancelJoin('{id}', {join})" class="apply-button absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">취소</button>
-        </div>
-        """
-
-    return jsonify({'result': 'success','tempHtml':tempHtml})
-
 #데이터 생성
 @app.route('/product', methods=['POST'])
 def post_product():
-
+    print("sdsd")
     url_receive = request.form['url_give']
     comment_receive = request.form['comment_give']
 
@@ -218,13 +102,26 @@ def post_product():
 
 
     # 2. meta tag를 스크래핑하기
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36', "Accept-Language": "ko-KR,ko;q=0.8,en-US;q=0.5,en;q=0.3"}
+    headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0",
+            'Accept': 'image/avif,image/webp,image/apng,image/,/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5,ko-KR,ko;q=0.8,',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive'
+        }
+        
+       # "User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36", "Accept-Language": "ko-KR,ko;q=0.8,en-US;q=0.5,en;q=0.3"}
+    print("sdsd2")
     data = requests.get(url_receive, headers=headers)
+    print(data.headers)
+    print("sdsd3")
+    print(data.status_code)
     soup = BeautifulSoup(data.text, 'html.parser')
-
+    
     og_image = soup.select_one('meta[property="og:image"]')
     og_title = soup.select_one('meta[property="og:title"]')
-    og_price = soup.select_one('span.total-price > strong').get_text()
+    print(og_title)
+    og_price = soup.select_one('._1LY7DqCnwR').get_text()
     
     price_receive = og_price
     image_receive = og_image['content']
@@ -245,9 +142,7 @@ def post_product():
                     'end': end_receive,
                     'account': account_receive,
                     'join': user_list,
-                    'register': current_user
-                    }
-
+                    'creator': current_user}
     
     # 3. mongoDB에 데이터를 넣기
     db.informations.insert_one(informations)
@@ -282,16 +177,20 @@ def product_apply():
 @app.route('/canceljoin', methods=['POST'])
 def cancel_join():
     id = request.form['product_id']
-    # user_list = request.form['userlist']
+    userlist = request.form['userlist']
     product = db.informations.find_one({'_id':ObjectId(id)})
 
     token = request.cookies.get('token')
     data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
     current_user = data['username']
-
+    # user_list = [current_user]
+    print(current_user)
     user_list = product['join']
-
+    print(user_list)
     user_list.remove(current_user)
+    print(user_list)
+
+
 
     db.informations.update_one({'_id':ObjectId(id)}, {'$set':{'join':user_list}})
     return jsonify({'result': 'success'})
@@ -304,7 +203,6 @@ def product_cancel():
     id = request.form['product_id']
     
     db.informations.delete_one({'_id':ObjectId(id)})
-    return jsonify({'result': 'success'})
 
 
 # 데이터 삭제
