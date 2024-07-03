@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<!-- JS -->
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+            crossorigin="anonymous"></script>
+
+        <!-- tailwindcss -->
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+        <!-- style -->
+        <style type="text/css">
+            * {
+                font-family: "Noto Sans KR", sans-serif;
+            }
+
+            .wrap {
+                width: 900px;
+                margin: auto;
+            }
+
+        </style>
+        <script>
+            function openClose() {
+                // id 값 post-box의 display 값이 block 이면(= 눈에 보이면)
+                if ($("#post-box").css("display") == "block") {
+                    // post-box를 가리고
+                    $("#post-box").hide();
+                    // 다시 버튼을 클릭하면, 박스 열기를 할 수 있게 텍스트 바꿔두기
+                    $("#btn-post-box").text("+");
+                } else {
+                    // 아니면(눈에 보이지 않으면) post-box를 펴라
+                    $("#post-box").show();
+                    // 다시 버튼을 클릭하면, 박스 닫기를 할 수 있게 텍스트 바꿔두기
+                    $("#btn-post-box").text("닫기");
+                }
+            }
+
+            function applyJoin(id, userlist, max) {
+                $.ajax({
+                type: "POST",
+                url: "/apply",
+                data: {product_id : id,  userlist: userlist, max: max},
+                success: function (response) {
+                    if (response.result == "success") {
+                // updateButton(id, response.cancelJoin, max);  // 버튼 업데이트
+                } else {
+                    alert("이미 마감");
+                }    
+                }
+                });
+                window.location.reload();
+            }
+        </script>
+        <title>같이사자!</title>    
+</head>
+<body>
+    <h1>{{ data.message }}</h1>
+    <div class="wrap"></div>
+        <!-- 새등록 -->
+        <div class="relative flex flex-col overflow-hidden p-1 sm:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h1 class="text-3xl font-bold leading-none">새등록</h1>
+                <a href="#" onclick="openClose()" id="btn-post-box" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
+                    +
+                </a> 
+            </div>
+            <hr class="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700">
+            <div id="post-box" style="display:none" class="w-full p-4  bg-white border border-gray-200 rounded-lg shadow sm:p-8 dark:bg-gray-800 dark:border-gray-700"></div>
+                <form class="space-y-3" action="{{ /product }}" method="post">
+                    <h4>모집 정보를 입력해주세요</h4>
+                    <div>
+                        <label for="url" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">상품 URL</label>
+                        <input type="url" name="url" id="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="" />
+                    </div>
+                    <div>
+                        <label for="end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">종료시간</label>
+                        <input type="datetime-local" id="end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="" />
+                    </div>
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="min" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">최저인원</label>
+                            <input type="number" id="min" data-input-counter class="flex-shrink-0 text-gray-900 dark:text-white border-0 bg-transparent text-sm font-normal focus:outline-none focus:ring-0 max-w-[2.5rem] text-center" placeholder="" value="2" required />
+                        </div>
+                        <div>
+                            <label for="max" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">최고인원</label>
+                            <input type="number" id="max" data-input-counter class="flex-shrink-0 text-gray-900 dark:text-white border-0 bg-transparent text-sm font-normal focus:outline-none focus:ring-0 max-w-[2.5rem] text-center" placeholder="" value="5" required />
+                        </div>
+                    </div>
+                    <div>
+                        <label for="account" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">계좌번호</label>
+                        <input type="text" id="account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="" />
+                    </div>
+                    <div>
+                        <label for="comment" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">간단 코멘트</label>
+                        <textarea id="comment" rows="2" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder=""></textarea>
+                    </div>
+
+                    <button type="submit" class="font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
+                        등록하기</button>
+                    <!-- <input type="text" name="user_input" placeholder="Enter something">
+                    <button type="submit">Submit</button> -->
+                </form>
+            </div>
+        </div>
+        <!-- 모집중 -->
+        <div class="relative flex flex-col overflow-hidden p-1 sm:p-6">
+            <h1 class="text-3xl font-bold">모집중</h1>
+            <hr class="h-px my-8  bg-gray-200 border-0 dark:bg-gray-700">
+            <!-- 등록 상품 list -->
+            <div id="cards-box" class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                {% for product in products %}
+                    <div class="relative h-auto max-w-full bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+                        <img class="h-auto w-full rounded-lg" src="{{ products.image }}" alt="Card image cap">
+                        <div class="p-3">
+                            <a href="{{products.url}}" target="_blank" class="card-title" id="{{ products._id }}">{title}</a>
+                            <p class="card-text price" id="{{ products._id }}">{price}</p>
+                            <p class="card-text min_to_max" id="{{ products._id }}">모집인원 : {min}명 ~ {max}명</p>
+                            <p class="card-text join_to_max" id="{{ products._id }}">참여중인원 : <a href=# onclick="alert({join})">{len(join)}</a>/{max}</p>
+                            <p class="card-text end" id="{{ products._id }}">마감시간 : {end}</p>
+                            <p class="card-text account" id="{{ products._id }}">은행 계좌 : {account}</p>
+                            <p class="card-text comment" id="{{ products._id }}">코멘트 : {comment}</p>
+                            $.get("/apply", {name: {{ products._id }}, join: {{ products._join }}, max: {{ products._max }}})
+                            <button id="{{ products._id }}-button" type="submit" class="apply-button absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">참여</button>
+                        </div>
+                        {{ /apply }}
+                    </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</html>
