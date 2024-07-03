@@ -48,33 +48,110 @@
                                     informations[i]["title"], informations[i]["price"],
                                     informations[i]["comment"], informations[i]["min"],
                                     informations[i]["max"], informations[i]["end"],
-                                    informations[i]["account"], informations[i]["join"]);
+                                    informations[i]["account"], informations[i]["join"],
+                                    informations[i]['_id']                      
+                                 
+                                );
                         }
                      //   console.log(informations)
                         console.log(informations)
-                        
                     }
                 })
             }
-
-            function makeCard(image, url, title, price, comment, min, max, end, account, join) {
+            function makeCard(image, url, title, price, comment, min, max, end, account, join, id) {
+                let join_len = join.length
+                
                 let tempHtml = `<div class="card">
-                        <img class="card-img-top" src="${image}" alt="Card image cap">
+                        <img class="card-img-top" src="${image}" alt="Card image cap" id="${id}">
                         <div class="card-body">
-                        <a href="${url}" target="_blank" class="card-title">${title}</a>
-                        <p class="card-text price">${price}</p>
-                        <p class="card-text comment">코멘트 : ${comment}</p>
-                        <p class="card-text min">최소인원 : ${min}</p> 
-                        <p class="card-text max">최대인원 : ${max}</p> 
-                        <p class="card-text end">마감시간 : ${end}</p> 
-                        <p class="card-text account">은행 계좌 : ${account}</p> 
-                        <p class="card-text join">참여중 : ${join}</p> 
-                       
+                        <a href="${url}" target="_blank" class="card-title" id="${id}">${title}</a>
+                        <p class="card-text price" id="${id}">${price}</p>
+                        <p class="card-text comment" id="${id}">코멘트 : ${comment}</p>
+                        <p class="card-text min_to_max" id="${id}">모집인원 : ${min}명 ~ ${max}명</p>
+                        <p class="card-text join_to_max" id="${id}">참여중인원 : <a href=# onclick="alert('${join}')">${join_len}</a>/${max}</p>
+                        <p class="card-text end" id="${id}">마감시간 : ${end}</p>
+                        <p class="card-text account" id="${id}">은행 계좌 : ${account}</p>
+                        <button id="${id}-button" class="apply-button" onclick="applyJoin('${id}', '${join}', '${max}')">참여</button>
                         </div>
                     </div>`;
+                console.log(id)
                 $("#cards-box").append(tempHtml);
-
             }
+
+
+
+            // function applyOrCancel(id, userlist){
+            //     let applied = currentJoin.includes(userlist);
+
+            //     if (applied) {
+            //         cancelProduct(id, userlist)
+            //     } else {
+            //         applyProduct(id, userlist);
+            //     }
+                
+            // }
+
+
+            function applyJoin(id, userlist,max) {
+                $.ajax({
+                type: "POST",
+                url: "/apply",
+                data: {product_id : id,  userlist: userlist, max: max},
+                success: function (response) {
+                    if (response.result == "success") {
+                // updateButton(id, response.cancelJoin, max);  // 버튼 업데이트
+            } else {
+                alert("이미 마감");
+            }
+            
+        }
+    });
+}
+
+            function cancelJoin(id, userlist) {
+                            $.ajax({
+                            type: "POST",
+                            url: "/canceljoin",
+                            data: {product_id : id,  userlist: userlist},
+                            success: function (response) {
+                                if (response.result == "success") {
+                            // updateButton(id, response.cancelJoin, max);  // 버튼 업데이트
+                        } else {
+                            alert("취소 실패");
+                        }
+                    }
+                });
+            }
+
+
+            function cancelProduct (id, userlist) { 
+                $.ajax({
+                type: "POST",
+                url: "/cancel",
+                data: {product_id : id,  userlist: userlist},
+                success: function (response) {
+                    if (response.result == "success") {
+                // updateButton(id, response.cancelJoin, max);  // 버튼 업데이트
+            } else {
+                alert("취소 실패");
+            }
+        }
+    });
+}
+            
+
+         
+//         function updateButton(id, noin, max){
+//             let join_len = newJoin.length;
+//             let button_text;
+//             if(join_len >= max) {
+//                 button_text = "마감";
+//             } else {
+//                 button_text = "취소";
+//             }
+//             $(`#${id}-button`).text(button_text);  // 버튼 텍스트 업데이트
+// }
+
 
             function openClose() {
                 // id 값 post-box의 display 값이 block 이면(= 눈에 보이면)
@@ -116,14 +193,35 @@
                     }
                 })
             }
+
+
+
+            function test() {
+                $.ajax({
+                    type: "GET", // POST 방식으로 요청하겠다.
+                    url: "/test", // /memo라는 url에 요청하겠다.
+                    data: {}, // 데이터를 주는 방법
+                    success: function (response) { // 성공하면
+                        if (response["result"] == "success") {
+                            alert(" test 데이터 성공!");
+                            // 3. 성공 시 페이지 새로고침하기
+                            window.location.reload();
+                        } else {
+                            alert(" 실패실패! ")
+                        }
+                    }
+                })
+            }
+
         </script>
     </head>
 
 
     <body>
         <div class="wrap">
-            <button type="button" onclick="" class="fixed top-5 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
-                로그아웃</button>
+            <button type="button" onclick="location.href='logout'" class="fixed top-5 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">로그아웃</button>
+            <button type="button" onclick="test()" class="fixed top-10 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
+                    TEST</button>
 
             <!-- 새등록 -->
             <div class="relative flex flex-col overflow-hidden p-1 sm:p-6">
