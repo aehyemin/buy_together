@@ -29,9 +29,9 @@ def test_product():
                 'comment':'comment_receive',
                 'min': 2,
                 'max': 5,
-                'end': '2022.02.03',
+                'end': '2024.09.03',
                 'account': 9454833935,
-                'join': ['김정글', '김코딩', '김파이','김물병','김패드']}
+                'join': ['김정글', '김코딩', '김파이','김물병']}
     
     db.informations.insert_one(test_data)
     # db.informations.delete_one({'comment':'동해물'})
