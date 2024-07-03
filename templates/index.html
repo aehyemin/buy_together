@@ -35,93 +35,43 @@
 
             });
 
-            function showProducts() {
+            async function showProducts() {
                 $.ajax({
+                    
                     type: "GET",
                     url: "/product",
                     data: {},
                     success: function (response) {
                         let informations = response["informations"];
-                        
                         let ing = informations[0]
                         let will = informations[1]
-                       
+
                         for (let i = 0; i < ing.length; i++) {
-                            makeCard(ing[i]["image"], ing[i]["url"],
-                                    ing[i]["title"], ing[i]["price"],
-                                    ing[i]["comment"], ing[i]["min"],
-                                    ing[i]["max"], ing[i]["end"],
-                                    ing[i]["account"], ing[i]["join"],0,
-                                    ing[i]['_id']                      
-                                 
-                                );
+                            makeCard(ing[i]['_id'], 0);
                         }
                         for (let i = 0; i < will.length; i++) {
-                            makeCard(will[i]["image"], will[i]["url"],
-                                    will[i]["title"], will[i]["price"],
-                                    will[i]["comment"], will[i]["min"],
-                                    will[i]["max"], will[i]["end"],
-                                    will[i]["account"], will[i]["join"],1,
-                                    will[i]['_id']
-                                    );
+                            makeCard(will[i]['_id'], 1);
                         }
                     }
                 })
             }
-            function makeCard(image, url, title, price, comment, min, max, end, account, join, mark, id) {
-                let join_len = join.length
 
-                let tempHtml = `<div class="relative h-auto max-w-full bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-                    `
-                if (mark == 0){
-                    tempHtml += `
-                    <div class="absolute top-0 right-0 m-4 text-white bg-blue-700 px-4 py-2 rounded">참여중</div>
-                    `;
-                }
-
-                tempHtml += `
-                    <img class="h-auto w-full rounded-lg" src="${image}" alt="Card image cap">
-                    <div class="p-3">
-                        <a href="${url}" target="_blank" class="card-title" id="${id}">${title}</a>
-                        <p class="card-text price" id="${id}">${price}</p>
-                        <p class="card-text min_to_max" id="${id}">모집인원 : ${min}명 ~ ${max}명</p>
-                        <p class="card-text join_to_max" id="${id}">참여중인원 : <a href=# onclick="alert('${join}')">${join_len}</a>/${max}</p>
-                        <p class="card-text end" id="${id}">마감시간 : ${end}</p>
-                        <p class="card-text account" id="${id}"><a href="#" onclick="alertInfo()" data-info="${account}\n\n${comment}">결제 정보</a></p>
-                        `;
-             
-                if (mark == 1){  
-                    if (join.length == max){
-                        tempHtml += `
-                                <button id="${id}-button" class="text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">인원마감</button>
-                            </div>
-                        </div>
-                        `
+            function makeCard(id, mark) {
+                // console.log(typeof join)
+                // let join_array = Object.entries(join)
+                // console.log(typeof join_array )
+                $.ajax({
+                    type: "POST",
+                    url: "/makeCard",
+                    data: { id_give:id, mark_give:mark},
+                    success: function (response) {
+                        let tempHtml = response["tempHtml"];
+                        let $card = $(tempHtml);
+                        
+                        $("#cards-box").append($card);
+                        endTime($card.find('.apply-button'), end);   
                     }
-                    else{
-                        tempHtml += `
-                                <button id="${id}-button" onclick="applyJoin('${id}', '${join}', '${max}')" class="apply-button absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">참여</button>
-                            </div>
-                        </div>
-                        `
-                    }
-                }
-                else{
-                    tempHtml += `
-                        </div>
-                        <button id="${id}-button" onclick="cancelJoin('${id}', '${join}', '${max}')" class="apply-button max-w-full text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 mb-5 ml-2 font-medium rounded-lg">취소</button>
-                    </div>
-                    `
-                }
-                let $card = $(tempHtml);
-                $("#cards-box").append($card);
-
-                // 카드 생성 후 버튼 비활성화 타이머 설정
-                endTime($card.find('.apply-button'), end);
-                // 표시 누르면 계좌번호, 코멘트 alert
-                $card.find('.account a').click(function () {
-                    alert($card.find('.account a').data('info'));
-                });
+                    });
             }
 
             // 시간 끝나면 버튼 비활성화
@@ -140,7 +90,7 @@
                     $button.text('마감');
                 }            }
 
-            function applyJoin(id, userlist,max) {
+            function applyJoin(id, userlist, max) {
                 $.ajax({
                 type: "POST",
                 url: "/apply",
@@ -156,51 +106,40 @@
                 window.location.reload();
             }
 
-            function cancelJoin(id, userlist) {
+            function cancelJoin(id) {
                             $.ajax({
                             type: "POST",
                             url: "/canceljoin",
-                            data: {product_id : id,  userlist: userlist},
+                            data: {product_id : id},
                             success: function (response) {
                                 if (response.result == "success") {
+                                    window.location.reload();
                             // updateButton(id, response.cancelJoin, max);  // 버튼 업데이트
                         } else {
                             alert("취소 실패");
                         }
                     }
                 });
-                window.location.reload();
             }
 
 
-            function cancelProduct (id, userlist) { 
+            function cancelProduct (id) { 
                 $.ajax({
                 type: "POST",
                 url: "/cancel",
-                data: {product_id : id,  userlist: userlist},
+                data: {product_id : id},
                 success: function (response) {
                     if (response.result == "success") {
+                        alert("등록상품 삭제")
+                        window.location.reload();
                 // updateButton(id, response.cancelJoin, max);  // 버튼 업데이트
-            } else {
-                alert("취소 실패");
+                    } else {
+                        alert("취소 실패");
+                                }
+                    }
+                });
             }
-        }
-    });
-}
-            
-
-         
-//         function updateButton(id, noin, max){
-//             let join_len = newJoin.length;
-//             let button_text;
-//             if(join_len >= max) {
-//                 button_text = "마감";
-//             } else {
-//                 button_text = "취소";
-//             }
-//             $(`#${id}-button`).text(button_text);  // 버튼 텍스트 업데이트
-// }
-
+     
 
             function openClose() {
                 // id 값 post-box의 display 값이 block 이면(= 눈에 보이면)
@@ -258,7 +197,6 @@
             window.addEventListener('pageshow', checkToken);
             window.addEventListener('popstate', checkToken);
 
-
             function test() {
                 $.ajax({
                     type: "GET", // POST 방식으로 요청하겠다.
@@ -281,6 +219,8 @@
 
 
     <body>
+        <button type="button" onclick="location.href='logout'" class="fixed top-5 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
+            로그아웃</button>
         <button type="button" onclick="location.href='logout'" class="fixed top-5 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
             로그아웃</button>
 
@@ -330,6 +270,7 @@
                         </div>
     
                         <button type="button" onclick="postProducts()" class="font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
+                        <button type="button" onclick="postProducts()" class="font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
                             등록하기</button>
                     </form>
                 </div>
@@ -340,9 +281,11 @@
                 <h1 class="text-3xl font-bold">모집중</h1>
                 <hr class="h-px my-8  bg-gray-200 border-0 dark:bg-gray-700">
                 <!-- 등록 상품 list -->
+               
                 <div id="cards-box" class="grid grid-cols-1 gap-6 sm:grid-cols-3">
 
                 </div>
+                
             </div>
         </div>
         
