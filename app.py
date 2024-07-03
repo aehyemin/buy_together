@@ -16,16 +16,38 @@ app.config['SECRET_KEY'] = '아무거나'
 client = MongoClient('localhost', 27017)  # mongoDB는 27017 포트로 돌아갑니다.
 db = client.coupang  # 라는 이름의 db를 만들거나 사용합니다.
 
+@app.route('/test', methods=['GET'])
+def test_product():
+    # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
+    
+    test_data = {'url':'url',
+                    'title':'title',
+                    'price': 100000,
+                    'image': 'image',
+                    'comment':'comment_receive',
+                    'min': 2,
+                    'max': 5,
+                    'end': '2022.02.03',
+                    'account': 9454833935,
+                    'join': ['김정글', '김코딩', '김파이','김민경']}
+    
+    db.informations.insert_one(test_data)
+    # db.informations.delete_one({'comment':'동해물'})
+    return jsonify({'result': 'success'})
 
 #데이터 조회
 @app.route('/product', methods=['GET'])
 def read_product():
     # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
-    informations = list(db.informations.find({}, {'_id': 0}))
-    return jsonify({'result': 'success', 'informations': informations})
+    token = request.cookies.get('token')
+    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+    current_user = data['username']
 
-
-
+    join_ing = list(db.informations.find({'join':current_user }, {'_id': 0}))
+    join_will = list(db.informations.find({'join':{"$ne":current_user}},{'_id':0}))
+    sorted_info = [join_ing,join_will]
+  
+    return jsonify({'result': 'success', 'informations': sorted_info})
 
 #데이터 생성
 @app.route('/product', methods=['POST'])
@@ -53,8 +75,11 @@ def post_product():
     price_receive = og_price
     image_receive = og_image['content']
     title_receive = og_title['content']
-
-    user_list = []
+    
+    token = request.cookies.get('token')
+    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+    current_user = data['username']
+    user_list = [current_user]
 
     informations = {'url':url_receive,
                     'title': title_receive,
@@ -72,14 +97,6 @@ def post_product():
     # 3. mongoDB에 데이터를 넣기
     db.informations.insert_one(informations)
     return jsonify({'result': 'success'})
-
-
-@app.route('/memo', methods=['GET'])
-def read_articles():
-    # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
-    result = list(db.articles.find({}, {'_id': 0}))
-    # 2. articles라는 키 값으로 article 정보 보내주기
-    return jsonify({'result': 'success', 'articles': result})
 
 
 ##### 로그인, 회원가입 구현 #####
