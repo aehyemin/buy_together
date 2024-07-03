@@ -129,7 +129,8 @@
                         <p class="card-text account"><a href="#"
                                 onclick="alert('{{ product.account }}\n\n{{ product.comment }}')"
                                 data-info="{{ product.account }}\n\n{{ product.comment }}">결제 정보</a></p>
-                        <button onclick="cancelJoin('{{ product._id }}', '{{ product.join | join(', ') }}')"
+                        <button id="cancel-{{ product._id }}"
+                            onclick="cancelJoin('{{ product._id }}', '{{ product.join | join(', ') }}')"
                             class="apply-button max-w-full text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 mb-5 ml-2 font-medium rounded-lg">취소</button>
                         {% if product.creator == current_user %}
                         <button onclick="deleteProduct('{{ product._id }}')"
@@ -154,10 +155,10 @@
                                 onclick="alert('{{ product.account }}\n\n{{ product.comment }}')"
                                 data-info="{{ product.account }}\n\n{{ product.comment }}">결제 정보</a></p>
                         {% if product.join | length == product.max %}
-                        <button
+                        <button id="apply-{{ product._id }}"
                             class="text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">인원마감</button>
                         {% else %}
-                        <button
+                        <button id="apply-{{ product._id }}"
                             onclick="applyJoin('{{ product._id }}', '{{ product.join | join(', ') }}', '{{ product.max }}')"
                             class="apply-button absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">참여</button>
                         {% endif %}
@@ -173,44 +174,44 @@
 
         <script>
             function openClose() {
-                    // id 값 post-box의 display 값이 block 이면(= 눈에 보이면)
-                    if ($("#post-box").css("display") == "block") {
-                        // post-box를 가리고
-                        $("#post-box").hide();
-                        // 다시 버튼을 클릭하면, 박스 열기를 할 수 있게 텍스트 바꿔두기
-                        $("#btn-post-box").text("+");
-                    } else {
-                        // 아니면(눈에 보이지 않으면) post-box를 펴라
-                        $("#post-box").show();
-                        // 다시 버튼을 클릭하면, 박스 닫기를 할 수 있게 텍스트 바꿔두기
-                        $("#btn-post-box").text("닫기");
-                    }
+                // id 값 post-box의 display 값이 block 이면(= 눈에 보이면)
+                if ($("#post-box").css("display") == "block") {
+                    // post-box를 가리고
+                    $("#post-box").hide();
+                    // 다시 버튼을 클릭하면, 박스 열기를 할 수 있게 텍스트 바꿔두기
+                    $("#btn-post-box").text("+");
+                } else {
+                    // 아니면(눈에 보이지 않으면) post-box를 펴라
+                    $("#post-box").show();
+                    // 다시 버튼을 클릭하면, 박스 닫기를 할 수 있게 텍스트 바꿔두기
+                    $("#btn-post-box").text("닫기");
                 }
+            }
 
             function postProducts() {
-                    let url = $("#url").val();
-                    let end = $("#end").val();
-                    let min = $("#min").val();
-                    let max = $("#max").val();
-                    let account = $("#account").val();
-                    let comment = $("#comment").val();
+                let url = $("#url").val();
+                let end = $("#end").val();
+                let min = $("#min").val();
+                let max = $("#max").val();
+                let account = $("#account").val();
+                let comment = $("#comment").val();
 
-                    // 2. memo에 POST 방식으로 메모 생성 요청하기
-                    $.ajax({
-                        type: "POST", // POST 방식으로 요청하겠다.
-                        url: "/product", // /memo라는 url에 요청하겠다.
-                        data: { url_give: url, end_give: end, min_give: min, max_give: max, account_give: account, comment_give: comment }, // 데이터를 주는 방법
-                        success: function (response) { // 성공하면
-                            if (response["result"] == "success") {
-                                alert("등록 성공!");
-                                // 3. 성공 시 페이지 새로고침하기
-                                window.location.reload();
-                            } else {
-                                alert("서버 오류!")
-                            }
+                // 2. memo에 POST 방식으로 메모 생성 요청하기
+                $.ajax({
+                    type: "POST", // POST 방식으로 요청하겠다.
+                    url: "/product", // /memo라는 url에 요청하겠다.
+                    data: { url_give: url, end_give: end, min_give: min, max_give: max, account_give: account, comment_give: comment }, // 데이터를 주는 방법
+                    success: function (response) { // 성공하면
+                        if (response["result"] == "success") {
+                            alert("등록 성공!");
+                            // 3. 성공 시 페이지 새로고침하기
+                            window.location.reload();
+                        } else {
+                            alert("서버 오류!")
                         }
-                    })
-                }
+                    }
+                })
+            }
 
             function applyJoin(id, userlist, max) {
                 $.ajax({
@@ -257,16 +258,44 @@
                 });
             }
 
-            function checkToken() {
-                    fetch('/check_token')
-                        .then(response => response.json())
-                        .then(data => {
-                            if (!data.logged_in) {
-                                alert('세션이 만료되었습니다. 로그인 페이지로 이동합니다.');
-                                window.location.href = '/login';
-                            }
-                        });
+            function endTime(buttonId, end) {
+                const targetTime = new Date(end).getTime();
+                const now = new Date().getTime();
+                const timeRemaining = targetTime - now;
+
+                if (timeRemaining > 0) {
+                    setTimeout(function () {
+                        const button = document.getElementById(buttonId);
+                        button.disabled = true;
+                        button.textContent = '마감';
+                    }, timeRemaining);
+                } else {
+                    const button = document.getElementById(buttonId);
+                    button.disabled = true;
+                    button.textContent = '마감';
                 }
+            }
+
+            $(document).ready(function () {
+                // 마감 시간 체크하여 버튼 비활성화 설정
+                {% for product in join_ing %}
+                endTime('cancel-{{ product._id }}', '{{ product.end }}');
+                {% endfor %}
+                {% for product in join_will %}
+                endTime('apply-{{ product._id }}', '{{ product.end }}');
+                {% endfor %}
+            });
+
+            function checkToken() {
+                fetch('/check_token')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.logged_in) {
+                            alert('세션이 만료되었습니다. 로그인 페이지로 이동합니다.');
+                            window.location.href = '/login';
+                        }
+                    });
+            }
 
             window.addEventListener('pageshow', checkToken);
             window.addEventListener('popstate', checkToken);
