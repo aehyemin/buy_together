@@ -87,35 +87,13 @@
                         <p class="card-text min_to_max" id="${id}">모집인원 : ${min}명 ~ ${max}명</p>
                         <p class="card-text join_to_max" id="${id}">참여중인원 : <a href=# onclick="alert('${join}')">${join_len}</a>/${max}</p>
                         <p class="card-text end" id="${id}">마감시간 : ${end}</p>
-                        <p class="card-text account" id="${id}">은행 계좌 : ${account}</p>
-                        <p class="card-text comment" id="${id}">코멘트 : ${comment}</p>`;
-                // if (join.length == max){
-                //     tempHtml += `
-                //             <button id="${id}-button" class="absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">인원마감</button>
-                //         </div>
-                //     </div>
-                //     `
-                // }
-                // else{
-                //     if (mark == 1){
-                //     tempHtml += `
-                //             <button id="${id}-button" onclick="applyJoin('${id}', '${join}', '${max}')" class="apply-button absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">참여</button>
-                //         </div>
-                //     </div>
-                //     `}
-                // else {
-                //     tempHtml += `
-                //         </div>
-                //         <button id="${id}-button" onclick="cancelJoin('${id}', '${join}', '${max}')" class="apply-button absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">취소</button>
-                //     </div>
-                //     `
-                // }
-                // } 
-                // DB에 없으면
+                        <p class="card-text account" id="${id}"><a href="#" onclick="alertInfo()" data-info="${account}\n\n${comment}">결제 정보</a></p>
+                        `;
+             
                 if (mark == 1){  
                     if (join.length == max){
                         tempHtml += `
-                                <button id="${id}-button" class="absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">인원마감</button>
+                                <button id="${id}-button" class="text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">인원마감</button>
                             </div>
                         </div>
                         `
@@ -131,7 +109,7 @@
                 else{
                     tempHtml += `
                         </div>
-                        <button id="${id}-button" onclick="cancelJoin('${id}', '${join}', '${max}')" class="apply-button absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">취소</button>
+                        <button id="${id}-button" onclick="cancelJoin('${id}', '${join}', '${max}')" class="apply-button max-w-full text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 mb-5 ml-2 font-medium rounded-lg">취소</button>
                     </div>
                     `
                 }
@@ -140,30 +118,11 @@
 
                 // 카드 생성 후 버튼 비활성화 타이머 설정
                 endTime($card.find('.apply-button'), end);
-
-                // 삭제 버튼 누르면 삭제
-                // $card.find('.delete-button').on('click', function () {
-                //     let url = $(this).parent().find('.card-title').attr('href');
-                //     deleteProduct(url);
-                // });
+                // 표시 누르면 계좌번호, 코멘트 alert
+                $card.find('.account a').click(function () {
+                    alert($card.find('.account a').data('info'));
+                });
             }
-
-            // // 삭제해주는 ajax 함수
-            // function deleteProduct(url) {
-            //     $.ajax({
-            //         type: "DELETE",
-            //         url: "/delete",
-            //         data: {url_give: url},
-            //         success: function (response) {
-            //             if (response["result"] == "success") {
-            //                 alert("삭제 성공!");
-            //                 window.location.reload();
-            //             } else {
-            //                 alert("서버 오류!")
-            //             }
-            //         }
-            //     })
-            // }
 
             // 시간 끝나면 버튼 비활성화
             function endTime($button, end) {
