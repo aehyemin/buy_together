@@ -14,6 +14,7 @@
     <!-- tailwindcss -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
+
     <title>같이사자!</title>
 
     <!-- style -->
@@ -212,21 +213,114 @@
                     }
                 })
             }
+          
+          async function showProducts() {
+                $.ajax({
+                    
+                    type: "GET",
+                    url: "/product",
+                    data: {},
+                    success: function (response) {
+                        let informations = response["informations"];
+                        let ing = informations[0]
+                        let will = informations[1]
+
+                        for (let i = 0; i < ing.length; i++) {
+                            makeCard(ing[i]['_id'], 0);
+                        }
+                        for (let i = 0; i < will.length; i++) {
+                            makeCard(will[i]['_id'], 1);
+                        }
+                    }
+                })
+            }
+
+            function makeCard(id, mark) {
+                // console.log(typeof join)
+                // let join_array = Object.entries(join)
+                // console.log(typeof join_array )
+                $.ajax({
+                    type: "POST",
+                    url: "/makeCard",
+                    data: { id_give:id, mark_give:mark},
+                    success: function (response) {
+                        let tempHtml = response["tempHtml"];
+                        let $card = $(tempHtml);
+                        
+                        $("#cards-box").append($card);
+                        endTime($card.find('.apply-button'), end);   
+                    }
+                    });
+            }
+
+            // 시간 끝나면 버튼 비활성화
+            function endTime($button, end) {
+                const targetTime = new Date(end).getTime();
+                const now = new Date().getTime();
+                const timeRemaining = targetTime - now;
+
+                if (timeRemaining > 0) {
+                    setTimeout(function () {
+                        $button.attr('disabled', true);
+                        $button.text('마감');
+                    }, timeRemaining);
+                } else {
+                    $button.attr('disabled', true);
+                    $button.text('마감');
+                }            
+          
+            
 
             function applyJoin(id, userlist, max) {
                 $.ajax({
-                    type: "POST",
-                    url: "/apply",
-                    data: { product_id: id, userlist: userlist, max: max },
-                    success: function (response) {
-                        if (response.result == "success") {
-                            window.location.reload();
+                type: "POST",
+                url: "/apply",
+                data: {product_id : id,  userlist: userlist, max: max},
+                success: function (response) {
+                    if (response.result == "success") {
+                // updateButton(id, response.cancelJoin, max);  // 버튼 업데이트
+                } else {
+                    alert("이미 마감");
+                }    
+                }
+                });
+                window.location.reload();
+            }
+
+            function cancelJoin(id) {
+                            $.ajax({
+                            type: "POST",
+                            url: "/canceljoin",
+                            data: {product_id : id},
+                            success: function (response) {
+                                if (response.result == "success") {
+                                    window.location.reload();
+                            // updateButton(id, response.cancelJoin, max);  // 버튼 업데이트
                         } else {
-                            alert("이미 마감");
+                            alert("취소 실패");
                         }
                     }
                 });
             }
+
+
+            function cancelProduct (id) { 
+                $.ajax({
+                type: "POST",
+                url: "/cancel",
+                data: {product_id : id},
+                success: function (response) {
+                    if (response.result == "success") {
+                        alert("등록상품 삭제")
+                        window.location.reload();
+                // updateButton(id, response.cancelJoin, max);  // 버튼 업데이트
+                    } else {
+                        alert("취소 실패");
+                                }
+                    }
+                });
+            }
+
 
             function cancelJoin(id, userlist) {
                 $.ajax({
@@ -243,38 +337,8 @@
                 });
             }
 
-            function deleteProduct(id) {
-                $.ajax({
-                    type: "DELETE",
-                    url: "/delete",
-                    data: { product_id: id },
-                    success: function (response) {
-                        if (response.result == "success") {
-                            window.location.reload();
-                        } else {
-                            alert("삭제 실패");
-                        }
-                    }
-                });
-            }
 
-            function endTime(buttonId, end) {
-                const targetTime = new Date(end).getTime();
-                const now = new Date().getTime();
-                const timeRemaining = targetTime - now;
-
-                if (timeRemaining > 0) {
-                    setTimeout(function () {
-                        const button = document.getElementById(buttonId);
-                        button.disabled = true;
-                        button.textContent = '마감';
-                    }, timeRemaining);
-                } else {
-                    const button = document.getElementById(buttonId);
-                    button.disabled = true;
-                    button.textContent = '마감';
-                }
-            }
+            
 
             $(document).ready(function () {
                 // 마감 시간 체크하여 버튼 비활성화 설정
@@ -304,3 +368,4 @@
 </body>
 
 </html>
+
