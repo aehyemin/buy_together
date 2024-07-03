@@ -66,6 +66,49 @@ def internal_server_error(error):
 
 
 
+
+##########################################################################
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
+
+
+class CustomJSONProvider(JSONProvider):
+    def dumps(self, obj, **kwargs):
+        return json.dumps(obj, **kwargs, cls=CustomJSONEncoder)
+
+    def loads(self, s, **kwargs):
+        return json.loads(s, **kwargs)
+
+app.json = CustomJSONProvider(app)
+
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return 'Internal Server Error: {}'.format(error), 500
+
+
+@app.route('/test', methods=['GET'])
+def test_product():
+    # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
+    
+    test_data = {'url':'url',
+                    'title':'title',
+                    'price': 100000,
+                    'image': 'image',
+                    'comment':'comment_receive',
+                    'min': 2,
+                    'max': 5,
+                    'end': '2022.02.03',
+                    'account': 9454833935,
+                    'join': ['김정글', '김코딩', '김파이','김민경']}
+    
+    db.informations.insert_one(test_data)
+    # db.informations.delete_one({'comment':'동해물'})
+    return jsonify({'result': 'success'})
+
 #데이터 조회
 @app.route('/product', methods=['GET'])
 def read_product():
