@@ -106,6 +106,11 @@ def post_product():
     data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
     current_user = data['username']
     user_list = [current_user]
+    
+    token = request.cookies.get('token')
+    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+    current_user = data['username']
+    user_list = [current_user]
 
     informations = {'url':url_receive,
                     'title': title_receive,
@@ -182,6 +187,13 @@ def product_cancel():
     db.informations.delete_one({'_id':ObjectId(id)})
 
 
+# 데이터 삭제
+@app.route('/delete', methods=['DELETE'])
+def delete_product():
+    url_receive = request.form['url_give']
+    db.informations.delete_one({'url': url_receive})
+    return jsonify({'result': 'success'})
+
 
 ##### 로그인, 회원가입 구현 #####
 
@@ -203,7 +215,6 @@ def token_required(f):
     def decorated_function(*args, **kwargs):
         token = request.cookies.get('token')
         if not token:
-            flash('토큰이 없습니다')
             return redirect(url_for('login_get'))
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
@@ -211,9 +222,6 @@ def token_required(f):
             if not g.current_user:
                 flash('유효하지 않은 사용자입니다.')
                 return redirect(url_for('login_get'))
-        except jwt.ExpiredSignatureError:
-            flash('토큰이 만료되었습니다. 다시 로그인 해주세요.')
-            return redirect(url_for('login_get'))
         except jwt.InvalidTokenError:
             flash('틀린 토큰입니다.')
             return redirect(url_for('login_get'))
@@ -293,6 +301,20 @@ def logout():
 def reset():
     users.delete_many({})
     return redirect(url_for('login_get'))
+
+# 토큰 검증 (로그아웃 후 뒤로가기 방지)
+@app.route('/check_token')
+def check_token():
+    token = request.cookies.get('token')
+    if not token:
+        return jsonify({"logged_in": False})
+    try:
+        jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+        return jsonify({"logged_in": True})
+    except jwt.ExpiredSignatureError:
+        return jsonify({"logged_in": False})
+    except jwt.InvalidTokenError:
+        return jsonify({"logged_in": False})
 
 # 앱 실행
 if __name__ == '__main__':

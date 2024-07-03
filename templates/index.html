@@ -12,7 +12,6 @@
             crossorigin="anonymous"></script>
 
         <!-- tailwindcss -->
-        <!-- <link href="{{url_for('static',filename='css/output.css')}}" rel="stylesheet"> -->
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
         <title>같이사자!</title>
@@ -112,8 +111,51 @@
                     `
                 }
                 }
-                $("#cards-box").append(tempHtml);
+                let $card = $(tempHtml);
+                $("#cards-box").append($card);
+
+                // 카드 생성 후 버튼 비활성화 타이머 설정
+                endTime($card.find('.apply-button'), end);
+
+                // 삭제 버튼 누르면 삭제
+                // $card.find('.delete-button').on('click', function () {
+                //     let url = $(this).parent().find('.card-title').attr('href');
+                //     deleteProduct(url);
+                // });
             }
+
+            // // 삭제해주는 ajax 함수
+            // function deleteProduct(url) {
+            //     $.ajax({
+            //         type: "DELETE",
+            //         url: "/delete",
+            //         data: {url_give: url},
+            //         success: function (response) {
+            //             if (response["result"] == "success") {
+            //                 alert("삭제 성공!");
+            //                 window.location.reload();
+            //             } else {
+            //                 alert("서버 오류!")
+            //             }
+            //         }
+            //     })
+            // }
+
+            // 시간 끝나면 버튼 비활성화
+            function endTime($button, end) {
+                const targetTime = new Date(end).getTime();
+                const now = new Date().getTime();
+                const timeRemaining = targetTime - now;
+
+                if (timeRemaining > 0) {
+                    setTimeout(function () {
+                        $button.attr('disabled', true);
+                        $button.text('마감');
+                    }, timeRemaining);
+                } else {
+                    $button.attr('disabled', true);
+                    $button.text('마감');
+                }            }
 
             function applyJoin(id, userlist,max) {
                 $.ajax({
@@ -217,6 +259,21 @@
                     }
                 })
             }
+
+            // 토큰 체크 (로그아웃 후 뒤로가기 방지)
+            function checkToken() {
+                fetch('/check_token')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.logged_in) {
+                            alert('세션이 만료되었습니다. 로그인 페이지로 이동합니다.');
+                            window.location.href = '/login';
+                        }
+                    });
+            }
+
+            window.addEventListener('pageshow', checkToken);
+            window.addEventListener('popstate', checkToken);
 
 
             function test() {

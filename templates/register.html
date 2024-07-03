@@ -1,11 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full bg-white">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+
+    <!-- JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    
+    <!-- tailwindcss -->
+    <link href="{{url_for('static',filename='css/output.css')}}" rel="stylesheet">
+    <title>Document</title>
 </head>
-<body>
+<body class="h-full">
   {% with messages = get_flashed_messages() %}
   {% if messages %}
   <script>
@@ -17,7 +25,7 @@
   {% endif %}
   {% endwith %}
 
-  <form method="POST">
+  <!-- <form method="POST">
     <label for="username">아이디</label>
     <input type="text" id="username" name="username" placeholder="실명" required><br>
     
@@ -25,7 +33,48 @@
     <input type="password" id="password" name="password" required><br>
     
     <input type="submit" value="회원가입">
-  </form>
+  </form> -->
+
+
+  <div class="min-h-full flex flex-col justify-center items-center px-6 py-12 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+      <img class="mx-auto h-10 w-auto" src="../static/img/shopping_reji_gyouretsu_man.png"
+        alt="Your Company">
+      <h2 class="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">같이사자 회원가입</h2>
+    </div>
+    <br>
+  
+    <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+      <form class="space-y-6" action="/register" method="POST">
+        <div>
+          <label for="username" class="block text-sm font-medium leading-6 text-gray-900">아이디</label>
+          <div class="mt-2">
+            <input type="text" id="username" name="username" placeholder="실명" required style="border: 1px solid black"><br>
+          </div>
+        </div>
+        <br>
+        <div>
+          <div class="flex items-center justify-between">
+            <label for="password" class="block text-sm font-medium leading-6 text-gray-900">비밀번호</label>
+          </div>
+          <div class="mt-2">
+            <input id="password" name="password" type="password" autocomplete="current-password" required style="border: 1px solid black"
+              class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+          </div>
+        </div>
+  
+        <div>
+          <button type="submit"
+            class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Sign
+            in</button>
+        </div>
+
+        <input type="submit" value="회원가입"
+        class="bg-indigo-600">
+        
+      </form>
+    </div>
+  </div>
 
 
 </body>
