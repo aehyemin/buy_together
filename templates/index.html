@@ -67,10 +67,44 @@
                         <p class="card-text join_to_max">참여중인원 : <a href=# onclick="alert('${join}')">${join_len}</a>/${max}</p>
                         <p class="card-text end">마감시간 : ${end}</p>
                         <p class="card-text account">은행 계좌 : ${account}</p>
-                        <button class="apply-button">버튼</button>
+                        <button class="apply-button"">버튼</button>
                         </div>
                     </div>`;
-                $("#cards-box").append(tempHtml);
+                let $card = $(tempHtml);
+                $("#cards-box").append($card);
+
+                // 카드 생성 후 버튼 비활성화 타이머 설정
+                endTime($card.find('.apply-button'), end);
+            }
+
+            // 시간 끝나면 버튼 비활성화
+            function endTime($button, end) {
+                const targetTime = new Date(end).getTime();
+                const now = new Date().getTime();
+                const timeRemaining = targetTime - now;
+
+                if (timeRemaining > 0) {
+                    setTimeout(function () {
+                        $button.attr('disabled', true);
+                        $button.text('마감');
+                    }, timeRemaining);
+                } else {
+                    $button.attr('disabled', true);
+                    $button.text('마감');
+                }
+            }
+
+            function getNow() {
+                const now = new Date();
+
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작하므로 +1
+                const day = String(now.getDate()).padStart(2, '0');
+
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
             }
 
             function openClose() {
