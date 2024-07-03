@@ -18,6 +18,15 @@ app.config['SECRET_KEY'] = '아무거나'
 client = MongoClient('localhost', 27017)  # mongoDB는 27017 포트로 돌아갑니다.
 db = client.coupang  # 라는 이름의 db를 만들거나 사용합니다.
 
+names = [
+    "고태환", "김경은", "김민경", "김민석", "김민호", "김태현", "김성희", "김슬아",
+    "박시원", "박인성", "배지훈", "백승우", "서장우", "윤종성", "이동연", "이승민",
+    "이재석", "정유정", "정휘건", "진재웅", "최자영", "최재원", "최주혁", "하혜민",
+    "황준용", "염종인", "김해강", "박하연", "김예람", "윤민성", "정현우", "지창근",
+    "김영후", "김용성", "임채승", "강경임", "최정우", "박건우", "이동희", "김욱현",
+    "조형욱", "정재욱", "이승현", "정소연", "김태민", "서현승", "엄윤준"
+]
+
 @app.route('/test', methods=['GET'])
 def test_product():
     # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
@@ -31,7 +40,8 @@ def test_product():
                 'max': 5,
                 'end': '2024.09.03',
                 'account': 9454833935,
-                'join': ['김정글', '김코딩', '김파이','김물병']}
+                'join': ['김정글', '김코딩', '김파이','김물병'],
+                'creator': '김정글'}
     
     db.informations.insert_one(test_data)
     # db.informations.delete_one({'comment':'동해물'})
@@ -107,24 +117,17 @@ def post_product():
     current_user = data['username']
     user_list = [current_user]
     
-    token = request.cookies.get('token')
-    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-    current_user = data['username']
-    user_list = [current_user]
-
     informations = {'url':url_receive,
                     'title': title_receive,
                     'price': price_receive,
                     'image': image_receive,
                     'comment':comment_receive,
-
                     'min': min_receive,
                     'max': max_receive,
                     'end': end_receive,
-
                     'account': account_receive,
                     'join': user_list,
-                    }
+                    'creator': current_user}
     
     # 3. mongoDB에 데이터를 넣기
     db.informations.insert_one(informations)
@@ -190,21 +193,11 @@ def product_cancel():
 # 데이터 삭제
 @app.route('/delete', methods=['DELETE'])
 def delete_product():
-    url_receive = request.form['url_give']
-    db.informations.delete_one({'url': url_receive})
+    id_receive = request.form['product_id']
+    db.informations.delete_one({'_id': ObjectId(id_receive)})
     return jsonify({'result': 'success'})
 
-
 ##### 로그인, 회원가입 구현 #####
-
-names = [
-    "고태환", "김경은", "김민경", "김민석", "김민호", "김태현", "김성희", "김슬아",
-    "박시원", "박인성", "배지훈", "백승우", "서장우", "윤종성", "이동연", "이승민",
-    "이재석", "정유정", "정휘건", "진재웅", "최자영", "최재원", "최주혁", "하혜민",
-    "황준용", "염종인", "김해강", "박하연", "김예람", "윤민성", "정현우", "지창근",
-    "김영후", "김용성", "임채승", "강경임", "최정우", "박건우", "이동희", "김욱현",
-    "조형욱", "정재욱", "이승현", "정소연", "김태민", "서현승", "엄윤준"
-]
 
 app.secret_key = 'secretkey' # 비밀 키
 users = db.users # 유저 DB
@@ -237,7 +230,14 @@ def start():
 @app.route('/home')
 @token_required
 def home():
-    return render_template('index.html')
+    token = request.cookies.get('token')
+    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+    current_user = data['username']
+
+    join_ing = list(db.informations.find({'join': current_user }))
+    join_will = list(db.informations.find({'join': {"$ne": current_user }}))
+
+    return render_template('index.html', join_ing=join_ing, join_will=join_will, current_user=current_user)
 
 # 로그인
 @app.route('/login', methods=['GET'])
