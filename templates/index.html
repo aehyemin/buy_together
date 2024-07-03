@@ -44,26 +44,38 @@
                         let informations = response["informations"];
                         console.log(informations);
                         for (let i = 0; i < informations.length; i++) {
-                            makeCard(informations[i]["image"], informations[i]["url"], informations[i]["title"], informations[i]["price"],informations[i]["comment"]);
+                            makeCard(informations[i]["image"], informations[i]["url"],
+                                informations[i]["title"], informations[i]["price"],
+                                informations[i]["comment"], informations[i]["min"],
+                                informations[i]["max"], informations[i]["end"],
+                                informations[i]["account"], informations[i]["join"]);
                         }
-                     //   console.log(informations)
+                        //   console.log(informations)
                         console.log(informations)
-                        
                     }
                 })
             }
-
-            function makeCard(image, url, title, price, comment) {
+            function makeCard(image, url, title, price, comment, min, max, end, account, join) {
+                let join_len = join.length
                 let tempHtml = `<div class="card">
-                        <img class="card-img-top" src="${image}" alt="Card image cap">
-                        <div class="card-body">
-                        <a href="${url}" target="_blank" class="card-title">${title}</a>
-                        <p class="card-text">${price}</p>
-                        <p class="card-text comment">${comment}</p>
-                        </div>
-                    </div>`;
+                    <img class="card-img-top" src="${image}" alt="Card image cap">
+                    <div class="card-body">
+                    <a href="${url}" target="_blank" class="card-title">${title}</a>
+                    <p class="card-text price">${price}</p>
+                    <p class="card-text comment">코멘트 : ${comment}</p>
+                    <p class="card-text min_to_max">모집인원 : ${min}명 ~ ${max}명</p>
+                    <p class="card-text join_to_max">참여중인원 : ${join_len}/${max}</p>
+                    <p class="card-text end">마감시간 : ${end}</p>
+                    <p class="card-text account">은행 계좌 : ${account}</p>
+                    <p class="card-text join">참여중 : ${join}</p>
+                    <button class="apply-button">버튼</button>
+                    </div>
+                </div>`;
                 $("#cards-box").append(tempHtml);
+            }
 
+            function joinList() {
+                alert("참여자 목록");
             }
 
             function openClose() {
