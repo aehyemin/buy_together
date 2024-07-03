@@ -24,9 +24,6 @@ def read_product():
     informations = list(db.informations.find({}, {'_id': 0}))
     return jsonify({'result': 'success', 'informations': informations})
 
-
-
-
 #데이터 생성
 @app.route('/product', methods=['POST'])
 def post_product():
@@ -53,8 +50,11 @@ def post_product():
     price_receive = og_price
     image_receive = og_image['content']
     title_receive = og_title['content']
-
-    user_list = []
+    
+    token = request.cookies.get('token')
+    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+    current_user = data['username']
+    user_list = [current_user]
 
     informations = {'url':url_receive,
                     'title': title_receive,
