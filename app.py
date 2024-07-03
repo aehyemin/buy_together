@@ -18,26 +18,25 @@ app.config['SECRET_KEY'] = '아무거나'
 client = MongoClient('localhost', 27017)  # mongoDB는 27017 포트로 돌아갑니다.
 db = client.coupang  # 라는 이름의 db를 만들거나 사용합니다.
 
-<<<<<<< HEAD
 @app.route('/test', methods=['GET'])
 def test_product():
     # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
     
     test_data = {'url':'url',
-                    'title':'title',
-                    'price': 100000,
-                    'image': 'image',
-                    'comment':'comment_receive',
-                    'min': 2,
-                    'max': 5,
-                    'end': '2022.02.03',
-                    'account': 9454833935,
-                    'join': ['김정글', '김코딩', '김파이','김민경']}
+                'title':'title',
+                'price': 100000,
+                'image': 'image',
+                'comment':'comment_receive',
+                'min': 2,
+                'max': 5,
+                'end': '2022.02.03',
+                'account': 9454833935,
+                'join': ['김정글', '김코딩', '김파이','김민경']}
     
     db.informations.insert_one(test_data)
     # db.informations.delete_one({'comment':'동해물'})
     return jsonify({'result': 'success'})
-=======
+
 ##########################################################################
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -61,13 +60,11 @@ def internal_server_error(error):
     return 'Internal Server Error: {}'.format(error), 500
 
 
->>>>>>> wepScraping
 
 #데이터 조회
 @app.route('/product', methods=['GET'])
 def read_product():
     # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
-<<<<<<< HEAD
     token = request.cookies.get('token')
     data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
     current_user = data['username']
@@ -77,10 +74,6 @@ def read_product():
     sorted_info = [join_ing,join_will]
   
     return jsonify({'result': 'success', 'informations': sorted_info})
-=======
-    informations = list(db.informations.find({}))
-    return jsonify({'result': 'success', 'informations': informations})
->>>>>>> wepScraping
 
 #데이터 생성
 @app.route('/product', methods=['POST'])
@@ -133,16 +126,6 @@ def post_product():
     return jsonify({'result': 'success'})
 
 
-<<<<<<< HEAD
-=======
-# @app.route('/memo', methods=['GET'])
-# def read_articles():
-#     # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
-#     result = list(db.articles.find({}, {'_id': 0}))
-#     # 2. articles라는 키 값으로 article 정보 보내주기
-#     return jsonify({'result': 'success', 'articles': result})
-
-
 
 #참여
 @app.route('/apply', methods=['POST'])
@@ -167,17 +150,6 @@ def product_apply():
         return jsonify({'result': 'success'})
     
     
-    
-
-
-    # if product:
-    #     current_join = product['join']
-    #     if current_user not in current_join:
-    #         current_join.append(username)
-    #         db.informations.update_one({'_id':ObjectId(id)}, {'$set':{'join':current_join}})
-    #         return jsonify({'result': 'success'})
-    #     else:
-    #         return jsonify({'result': 'fail'})
 
 @app.route('/canceljoin', methods=['POST'])
 def cancel_join():
@@ -202,36 +174,6 @@ def cancel_join():
 
 
 
-    # userlist = request.form['userlist']
-    # token = request.cookies.get('token')
-    # data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-    # current_user = data['username']
-    # user_list = [current_user]
-    # if product:
-    #     join_list = product['join']
-    #     if current_user in join_list:
-    #         join_list.remove(userlist)
-    #         db.informations.update_one({'_id':ObjectId(id)}, {'$set': {'join': join_list}})
-    #         return jsonify({'result': 'success', 'cancelJoin': join_list})
-
-@app.route('/test', methods=["GET"])
-def test_product():
-    # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
-    test_data = {'url':'url',
-                    'title':'title',
-                    'price': 100000,
-                    'image': 'image',
-                    'comment':'comment_receive',
-                    'min': 2,
-                    'max': 5,
-                    'end': '2022.02.03',
-                    'account': 9454833935,
-                    'join': ['김정글', '김코딩', '김파이','김민경']}
-    db.informations.insert_one(test_data)
-    # db.informations.delete_one({'comment':'동해물'})
-    return jsonify({'result': 'success'})
-
-
 #취소
 @app.route('/cancel', methods=["POST"])
 def product_cancel():
@@ -241,14 +183,6 @@ def product_cancel():
 
 
 
-
-
-
-
-
-
-
->>>>>>> wepScraping
 ##### 로그인, 회원가입 구현 #####
 
 names = [

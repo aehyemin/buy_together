@@ -69,7 +69,7 @@
                     }
                 })
             }
-            function makeCard(image, url, title, price, comment, min, max, end, account, join, mark) {
+            function makeCard(image, url, title, price, comment, min, max, end, account, join, mark,id) {
                 let join_len = join.length
 
                 let tempHtml = `<div class="relative h-auto max-w-full bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
@@ -247,9 +247,6 @@
             TEST</button>
         
         <div class="wrap">
-            <button type="button" onclick="location.href='logout'" class="fixed top-5 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">로그아웃</button>
-            <button type="button" onclick="test()" class="fixed top-10 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
-                    TEST</button>
 
             <!-- 새등록 -->
             <div class="relative flex flex-col overflow-hidden p-1 sm:p-6">
