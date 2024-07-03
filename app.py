@@ -81,6 +81,13 @@ def read_articles():
     # 2. articles라는 키 값으로 article 정보 보내주기
     return jsonify({'result': 'success', 'articles': result})
 
+# 데이터 삭제
+@app.route('/delete', methods=['DELETE'])
+def delete_product():
+    url_receive = request.form['url_give']
+    db.informations.delete_one({'url': url_receive})
+    return jsonify({'result': 'success'})
+
 
 ##### 로그인, 회원가입 구현 #####
 

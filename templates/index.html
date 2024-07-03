@@ -12,7 +12,7 @@
             crossorigin="anonymous"></script>
 
         <!-- tailwindcss -->
-        <link href="{{url_for('static',filename='css/output.css')}}" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
         <title>같이사자!</title>
 
@@ -68,6 +68,7 @@
                         <p class="card-text end">마감시간 : ${end}</p>
                         <p class="card-text account">은행 계좌 : ${account}</p>
                         <button class="apply-button"">버튼</button>
+                        <button class="delete-button">삭제</button>
                         </div>
                     </div>`;
                 let $card = $(tempHtml);
@@ -75,6 +76,29 @@
 
                 // 카드 생성 후 버튼 비활성화 타이머 설정
                 endTime($card.find('.apply-button'), end);
+
+                // 삭제 버튼 누르면 삭제
+                $card.find('.delete-button').on('click', function () {
+                    let url = $(this).parent().find('.card-title').attr('href');
+                    deleteProduct(url);
+                });
+            }
+
+            // 삭제해주는 ajax 함수
+            function deleteProduct(url) {
+                $.ajax({
+                    type: "DELETE",
+                    url: "/delete",
+                    data: {url_give: url},
+                    success: function (response) {
+                        if (response["result"] == "success") {
+                            alert("삭제 성공!");
+                            window.location.reload();
+                        } else {
+                            alert("서버 오류!")
+                        }
+                    }
+                })
             }
 
             // 시간 끝나면 버튼 비활성화
@@ -92,19 +116,6 @@
                     $button.attr('disabled', true);
                     $button.text('마감');
                 }
-            }
-
-            function getNow() {
-                const now = new Date();
-
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작하므로 +1
-                const day = String(now.getDate()).padStart(2, '0');
-
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-
-                return `${year}-${month}-${day}T${hours}:${minutes}`;
             }
 
             function openClose() {
