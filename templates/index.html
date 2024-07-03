@@ -12,7 +12,6 @@
             crossorigin="anonymous"></script>
 
         <!-- tailwindcss -->
-        <!-- <link href="{{url_for('static',filename='css/output.css')}}" rel="stylesheet"> -->
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
         <title>같이사자!</title>
@@ -36,79 +35,111 @@
 
             });
 
-            function showProducts() {
+            async function showProducts() {
                 $.ajax({
+                    
                     type: "GET",
                     url: "/product",
                     data: {},
                     success: function (response) {
                         let informations = response["informations"];
-                        
                         let ing = informations[0]
                         let will = informations[1]
-                       
+
                         for (let i = 0; i < ing.length; i++) {
-                            makeCard(ing[i]["image"], ing[i]["url"],
-                                    ing[i]["title"], ing[i]["price"],
-                                    ing[i]["comment"], ing[i]["min"],
-                                    ing[i]["max"], ing[i]["end"],
-                                    ing[i]["account"], ing[i]["join"],0);
+                            makeCard(ing[i]['_id'], 0);
                         }
                         for (let i = 0; i < will.length; i++) {
-                            makeCard(will[i]["image"], will[i]["url"],
-                                    will[i]["title"], will[i]["price"],
-                                    will[i]["comment"], will[i]["min"],
-                                    will[i]["max"], will[i]["end"],
-                                    will[i]["account"], will[i]["join"],1);
+                            makeCard(will[i]['_id'], 1);
                         }
                     }
                 })
             }
-            function makeCard(image, url, title, price, comment, min, max, end, account, join, mark) {
-                let join_len = join.length
-
-                let tempHtml = `<div class="relative h-auto max-w-full bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-                    `
-                if (mark == 0){
-                    tempHtml += `
-                    <div class="absolute top-0 right-0 m-4 text-white bg-blue-700 px-4 py-2 rounded">참여중</div>
-                    `;
-                }
-
-                tempHtml += `
-                    <img class="h-auto w-full rounded-lg" src="${image}" alt="Card image cap">
-                    <div class="p-3">
-                        <a href="${url}" target="_blank" class="card-title">${title}</a>
-                        <p class="card-text price">${price}</p>
-                        <p class="card-text comment">코멘트 : ${comment}</p>
-                        <p class="card-text min_to_max">모집인원 : ${min}명 ~ ${max}명</p>
-                        <p class="card-text join_to_max">참여중인원 : <a href=# onclick="alert('${join}')">${join_len}</a>/${max}</p>
-                        <p class="card-text end">마감시간 : ${end}</p>
-                        <p class="card-text account">은행 계좌 : ${account}</p>`;
-                if (join.length == max){
-                    tempHtml += `
-                            <button class="text-right text-white bg-blue-700 text-sm px-5 py-2.5 text-center me-2 mb-2 font-medium rounded-lg">마감</button>
-                        </div>
-                    </div>
-                    `
-                }
-                else{
-                    if (mark == 1){
-                    tempHtml += `
-                            <button class="text-right text-white bg-blue-700 text-sm px-5 py-2.5 text-center me-2 mb-2 font-medium rounded-lg">참여</button>
-                        </div>
-                    </div>
-                    `}
-                else {
-                    tempHtml += `
-                        </div>
-                        <button class="absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">취소</button>
-                    </div>
-                    `
-                }
-                }
-                $("#cards-box").append(tempHtml);
+            function makeCard(id, mark) {
+                // console.log(typeof join)
+                // let join_array = Object.entries(join)
+                // console.log(typeof join_array )
+                $.ajax({
+                    type: "POST",
+                    url: "/makeCard",
+                    data: { id_give:id, mark_give:mark},
+                    success: function (response) {
+                        let tempHtml = response["tempHtml"];
+                        let $card = $(tempHtml);
+                        
+                        $("#cards-box").append($card);
+                        endTime($card.find('.apply-button'), end);   
+                    }
+                    });
             }
+
+
+            // 시간 끝나면 버튼 비활성화
+            function endTime($button, end) {
+                const targetTime = new Date(end).getTime();
+                const now = new Date().getTime();
+                const timeRemaining = targetTime - now;
+
+                if (timeRemaining > 0) {
+                    setTimeout(function () {
+                        $button.attr('disabled', true);
+                        $button.text('마감');
+                    }, timeRemaining);
+                } else {
+                    $button.attr('disabled', true);
+                    $button.text('마감');
+                }            }
+
+            function applyJoin(id, userlist, max) {
+                $.ajax({
+                type: "POST",
+                url: "/apply",
+                data: {product_id : id,  userlist: userlist, max: max},
+                success: function (response) {
+                    if (response.result == "success") {
+                // updateButton(id, response.cancelJoin, max);  // 버튼 업데이트
+                } else {
+                    alert("이미 마감");
+                }    
+                }
+                });
+                window.location.reload();
+            }
+
+            function cancelJoin(id) {
+                            $.ajax({
+                            type: "POST",
+                            url: "/canceljoin",
+                            data: {product_id : id},
+                            success: function (response) {
+                                if (response.result == "success") {
+                                    window.location.reload();
+                            // updateButton(id, response.cancelJoin, max);  // 버튼 업데이트
+                        } else {
+                            alert("취소 실패");
+                        }
+                    }
+                });
+            }
+
+
+            function cancelProduct (id) { 
+                $.ajax({
+                type: "POST",
+                url: "/cancel",
+                data: {product_id : id},
+                success: function (response) {
+                    if (response.result == "success") {
+                        alert("등록상품 삭제")
+                        window.location.reload();
+                // updateButton(id, response.cancelJoin, max);  // 버튼 업데이트
+                    } else {
+                        alert("취소 실패");
+                                }
+                    }
+                });
+            }
+     
 
             function openClose() {
                 // id 값 post-box의 display 값이 block 이면(= 눈에 보이면)
@@ -151,6 +182,21 @@
                 })
             }
 
+            // 토큰 체크 (로그아웃 후 뒤로가기 방지)
+            function checkToken() {
+                fetch('/check_token')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.logged_in) {
+                            alert('세션이 만료되었습니다. 로그인 페이지로 이동합니다.');
+                            window.location.href = '/login';
+                        }
+                    });
+            }
+
+            window.addEventListener('pageshow', checkToken);
+            window.addEventListener('popstate', checkToken);
+
             function test() {
                 $.ajax({
                     type: "GET", // POST 방식으로 요청하겠다.
@@ -175,11 +221,14 @@
     <body>
         <button type="button" onclick="location.href='logout'" class="fixed top-5 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
             로그아웃</button>
+        <button type="button" onclick="location.href='logout'" class="fixed top-5 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
+            로그아웃</button>
 
         <button type="button" onclick="test()" class="fixed top-10 right-5 text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
             TEST</button>
         
         <div class="wrap">
+
             <!-- 새등록 -->
             <div class="relative flex flex-col overflow-hidden p-1 sm:p-6">
                 <div class="flex items-center justify-between mb-4">
@@ -221,6 +270,7 @@
                         </div>
     
                         <button type="button" onclick="postProducts()" class="font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
+                        <button type="button" onclick="postProducts()" class="font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ">
                             등록하기</button>
                     </form>
                 </div>
@@ -231,9 +281,11 @@
                 <h1 class="text-3xl font-bold">모집중</h1>
                 <hr class="h-px my-8  bg-gray-200 border-0 dark:bg-gray-700">
                 <!-- 등록 상품 list -->
+               
                 <div id="cards-box" class="grid grid-cols-1 gap-6 sm:grid-cols-3">
 
                 </div>
+                
             </div>
         </div>
         

@@ -2,19 +2,93 @@ from flask import Flask, render_template, jsonify, request, redirect, url_for, f
 import requests
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
-
+from bson.objectid import ObjectId
+import json
 # 로그인 관련 라이브러리
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import *
 import datetime
 import jwt
 from functools import wraps
+from flask.json.provider import JSONProvider
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '아무거나'
 
 client = MongoClient('localhost', 27017)  # mongoDB는 27017 포트로 돌아갑니다.
 db = client.coupang  # 라는 이름의 db를 만들거나 사용합니다.
+
+@app.route('/test', methods=['GET'])
+def test_product():
+    # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
+    
+    token = request.cookies.get('token')
+    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+    current_user = data['username']
+
+    test_data = {'url':'url',
+                'title':'title',
+                'price': '33900',
+                'image': 'image',
+                'comment':'comment_receive',
+                'min': 2,
+                'max': 5,
+                'end': '2024.09.03',
+                'account': '9454833935',
+                'join': ['김정글', '김코딩', '김파이','김물병','김EOd'],
+                'register' : '김정글'}
+    
+    db.informations.insert_one(test_data)
+    # db.informations.delete_many({})
+    return jsonify({'result': 'success'})
+
+##########################################################################
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
+
+
+class CustomJSONProvider(JSONProvider):
+    def dumps(self, obj, **kwargs):
+        return json.dumps(obj, **kwargs, cls=CustomJSONEncoder)
+
+    def loads(self, s, **kwargs):
+        return json.loads(s, **kwargs)
+
+app.json = CustomJSONProvider(app)
+
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return 'Internal Server Error: {}'.format(error), 500
+
+
+
+
+##########################################################################
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
+
+
+class CustomJSONProvider(JSONProvider):
+    def dumps(self, obj, **kwargs):
+        return json.dumps(obj, **kwargs, cls=CustomJSONEncoder)
+
+    def loads(self, s, **kwargs):
+        return json.loads(s, **kwargs)
+
+app.json = CustomJSONProvider(app)
+
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return 'Internal Server Error: {}'.format(error), 500
+
 
 @app.route('/test', methods=['GET'])
 def test_product():
@@ -43,11 +117,82 @@ def read_product():
     data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
     current_user = data['username']
 
-    join_ing = list(db.informations.find({'join':current_user }, {'_id': 0}))
-    join_will = list(db.informations.find({'join':{"$ne":current_user}},{'_id':0}))
+    join_ing = list(db.informations.find({'join':current_user }))
+    join_will = list(db.informations.find({'join':{"$ne":current_user}}))
     sorted_info = [join_ing,join_will]
   
     return jsonify({'result': 'success', 'informations': sorted_info})
+
+@app.route('/makeCard', methods=['POST'])
+def make_card():
+
+    token = request.cookies.get('token')
+    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+    current_user = data['username']
+
+    id = request.form['id_give']
+    mark = int(request.form['mark_give'])
+    product = db.informations.find_one({'_id':ObjectId(id)})
+
+    image =product['image']
+    url = product['url']
+    title = product['title']
+    price = product['price']
+    comment = product['comment']
+    min = product['min']
+    max = product['max']
+    end = product['end']
+    account = product['account']
+    join = product['join']
+    register = product['register']
+
+    tempHtml = """
+    <div class="relative h-auto max-w-full bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+    """
+    if mark == 0:
+        tempHtml += """
+        <div class="absolute top-0 left-0 m-4 text-white bg-blue-700 px-4 py-2 rounded">참여중</div>
+        """
+        if register == current_user:
+            tempHtml += f"""
+            <button onclick="cancelProduct('{id}')" class="absolute top-0 right-0 m-4 text-white bg-blue-700 px-4 py-2 rounded">X</button>
+            """
+
+    tempHtml += f"""
+        <img class="h-auto w-full rounded-lg" src="{image}" alt="Card image cap">
+        <div class="p-3">
+            <a href="{url}" target="_blank" class="card-title" id="{id}">{title}</a>
+            <p class="card-text price" id="{id}">{price}</p>
+            <p class="card-text min_to_max" id="{id}">모집인원 : {min}명 ~ {max}명</p>
+            <p class="card-text join_to_max" id="{id}">참여중인원 : <a href=# onclick="alert({join})">{len(join)}</a>/{max}</p>
+            <p class="card-text end" id="{id}">마감시간 : {end}</p>
+            <p class="card-text account" id="{id}">은행 계좌 : {account}</p>
+            <p class="card-text comment" id="{id}">코멘트 : {comment}</p>"""
+
+    # 참여 안 함
+    if mark == 1:  
+        if len(join) == max:
+            tempHtml += f"""
+                    <button id="{id}-button" class="absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">인원마감</button>
+                </div>
+            </div>
+            """
+        else:
+            tempHtml += f"""
+                    <button id="{id}-button" onclick="applyJoin('{id}', {join}, '{max}')" class="apply-button absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">참여</button>
+                </div>
+            </div>
+            """
+        
+    # 참여함
+    else:
+        tempHtml += f"""
+            </div>
+            <button id="{id}-button" onclick="cancelJoin('{id}', {join})" class="apply-button absolute inset-x-0 bottom-0 text-black bg-white border hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-white dark:hover:bg-blue-700 dark:focus:ring-blue-800 text-sm px-5 py-2 text-center mt-3 font-medium rounded-lg">취소</button>
+        </div>
+        """
+
+    return jsonify({'result': 'success','tempHtml':tempHtml})
 
 #데이터 생성
 @app.route('/product', methods=['POST'])
@@ -80,7 +225,7 @@ def post_product():
     data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
     current_user = data['username']
     user_list = [current_user]
-
+    
     informations = {'url':url_receive,
                     'title': title_receive,
                     'price': price_receive,
@@ -92,10 +237,73 @@ def post_product():
                     'end': end_receive,
 
                     'account': account_receive,
-                    'join': user_list}
+                    'join': user_list,
+                    'register': current_user
+                    }
     
     # 3. mongoDB에 데이터를 넣기
     db.informations.insert_one(informations)
+    return jsonify({'result': 'success'})
+
+
+
+#참여
+@app.route('/apply', methods=['POST'])
+def product_apply():
+    id = request.form['product_id']
+    max = int(request.form['max'])
+    # userlist = request.form['userlist']
+    product = db.informations.find_one({'_id':ObjectId(id)})
+
+    user_list = product["join"]
+
+    token = request.cookies.get('token')
+    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+    current_user = data['username']
+    # user_list = [current_user]
+    user_list.append(current_user)
+
+    if len(user_list) > max:
+        return jsonify({'result': 'failure'})
+    else:
+        db.informations.update_one({'_id':ObjectId(id)}, {'$set':{'join':user_list}})
+        return jsonify({'result': 'success'})
+    
+    
+
+@app.route('/canceljoin', methods=['POST'])
+def cancel_join():
+    id = request.form['product_id']
+    # user_list = request.form['userlist']
+    product = db.informations.find_one({'_id':ObjectId(id)})
+
+    token = request.cookies.get('token')
+    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+    current_user = data['username']
+
+    user_list = product['join']
+
+    user_list.remove(current_user)
+
+    db.informations.update_one({'_id':ObjectId(id)}, {'$set':{'join':user_list}})
+    return jsonify({'result': 'success'})
+
+
+
+#취소
+@app.route('/cancel', methods=["POST"])
+def product_cancel():
+    id = request.form['product_id']
+    
+    db.informations.delete_one({'_id':ObjectId(id)})
+    return jsonify({'result': 'success'})
+
+
+# 데이터 삭제
+@app.route('/delete', methods=['DELETE'])
+def delete_product():
+    url_receive = request.form['url_give']
+    db.informations.delete_one({'url': url_receive})
     return jsonify({'result': 'success'})
 
 
@@ -119,7 +327,6 @@ def token_required(f):
     def decorated_function(*args, **kwargs):
         token = request.cookies.get('token')
         if not token:
-            flash('토큰이 없습니다')
             return redirect(url_for('login_get'))
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
@@ -127,9 +334,6 @@ def token_required(f):
             if not g.current_user:
                 flash('유효하지 않은 사용자입니다.')
                 return redirect(url_for('login_get'))
-        except jwt.ExpiredSignatureError:
-            flash('토큰이 만료되었습니다. 다시 로그인 해주세요.')
-            return redirect(url_for('login_get'))
         except jwt.InvalidTokenError:
             flash('틀린 토큰입니다.')
             return redirect(url_for('login_get'))
@@ -210,7 +414,20 @@ def reset():
     users.delete_many({})
     return redirect(url_for('login_get'))
 
+# 토큰 검증 (로그아웃 후 뒤로가기 방지)
+@app.route('/check_token')
+def check_token():
+    token = request.cookies.get('token')
+    if not token:
+        return jsonify({"logged_in": False})
+    try:
+        jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+        return jsonify({"logged_in": True})
+    except jwt.ExpiredSignatureError:
+        return jsonify({"logged_in": False})
+    except jwt.InvalidTokenError:
+        return jsonify({"logged_in": False})
+
 # 앱 실행
 if __name__ == '__main__':
-    app.run(debug=True)
-
+    app.run('0.0.0.0', port=5001, debug=True)
