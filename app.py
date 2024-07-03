@@ -69,8 +69,8 @@ def read_product():
     data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
     current_user = data['username']
 
-    join_ing = list(db.informations.find({'join':current_user }, {'_id': 0}))
-    join_will = list(db.informations.find({'join':{"$ne":current_user}},{'_id':0}))
+    join_ing = list(db.informations.find({'join':current_user }))
+    join_will = list(db.informations.find({'join':{"$ne":current_user}}))
     sorted_info = [join_ing,join_will]
   
     return jsonify({'result': 'success', 'informations': sorted_info})
