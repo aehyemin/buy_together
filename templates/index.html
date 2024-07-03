@@ -118,6 +118,21 @@
                     }
                 })
             }
+
+            // 토큰 체크 (로그아웃 후 뒤로가기 방지)
+            function checkToken() {
+                fetch('/check_token')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.logged_in) {
+                            alert('세션이 만료되었습니다. 로그인 페이지로 이동합니다.');
+                            window.location.href = '/login';
+                        }
+                    });
+            }
+
+            window.addEventListener('pageshow', checkToken);
+            window.addEventListener('popstate', checkToken);
         </script>
     </head>
 

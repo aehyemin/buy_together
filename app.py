@@ -109,9 +109,6 @@ def token_required(f):
             if not g.current_user:
                 flash('유효하지 않은 사용자입니다.')
                 return redirect(url_for('login_get'))
-        except jwt.ExpiredSignatureError:
-            flash('토큰이 만료되었습니다. 다시 로그인 해주세요.')
-            return redirect(url_for('login_get'))
         except jwt.InvalidTokenError:
             flash('틀린 토큰입니다.')
             return redirect(url_for('login_get'))
@@ -191,6 +188,20 @@ def logout():
 def reset():
     users.delete_many({})
     return redirect(url_for('login_get'))
+
+# 토큰 검증 (로그아웃 후 뒤로가기 방지)
+@app.route('/check_token')
+def check_token():
+    token = request.cookies.get('token')
+    if not token:
+        return jsonify({"logged_in": False})
+    try:
+        jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+        return jsonify({"logged_in": True})
+    except jwt.ExpiredSignatureError:
+        return jsonify({"logged_in": False})
+    except jwt.InvalidTokenError:
+        return jsonify({"logged_in": False})
 
 # 앱 실행
 if __name__ == '__main__':
