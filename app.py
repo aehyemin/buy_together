@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 import json
+import time
 # 로그인 관련 라이브러리
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import *
@@ -16,8 +17,8 @@ from flask.json.provider import JSONProvider
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '아무거나'
 
-# client = MongoClient('localhost', 27017)  # mongoDB는 27017 포트로 돌아갑니다.
-client = MongoClient('mongodb://0701:0701@3.38.252.109',27017)
+client = MongoClient('localhost', 27017)  # mongoDB는 27017 포트로 돌아갑니다.
+# client = MongoClient('mongodb://0701:0701@3.38.252.109',27017)
 db = client.coupang  # 라는 이름의 db를 만들거나 사용합니다.
 
 names = [
@@ -40,7 +41,7 @@ def test_product():
                 'comment':'comment_receive',
                 'min': 2,
                 'max': 5,
-                'end': '2024.09.03',
+                'end': '2024.11.22',
                 'account': 9454833935,
                 'join': ['김정글', '김코딩', '김파이','김물병'],
                 'creator': '김정글'}
@@ -76,7 +77,6 @@ def internal_server_error(error):
 #데이터 조회
 @app.route('/product', methods=['GET'])
 def read_product():
-    # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기 (Read)
     token = request.cookies.get('token')
     data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
     current_user = data['username']
@@ -90,7 +90,6 @@ def read_product():
 #데이터 생성
 @app.route('/product', methods=['POST'])
 def post_product():
-    print("sdsd")
     url_receive = request.form['url_give']
     comment_receive = request.form['comment_give']
 
@@ -111,17 +110,38 @@ def post_product():
         }
         
        # "User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36", "Accept-Language": "ko-KR,ko;q=0.8,en-US;q=0.5,en;q=0.3"}
-    print("sdsd2")
-    data = requests.get(url_receive, headers=headers)
-    print(data.headers)
-    print("sdsd3")
-    print(data.status_code)
+    
+    try:
+        data = requests.get(url_receive, headers=headers)
+        print(data.status_code)
+        if data.status_code == 429:
+            retry_after = data.headers.get('Retry-After')
+            if retry_after:
+                print(f"Too many requests. Retry after {retry_after} seconds.")
+                time.sleep(int(retry_after))  # Retry after the specified time
+                data = requests.get(url_receive, headers=headers)  # Retry the request
+            else:
+                print("Too many requests. No retry time provided.")
+        print("Status code:", data.status_code)
+        print("Response headers:", data.headers)
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed: {e}")
+
     soup = BeautifulSoup(data.text, 'html.parser')
     
     og_image = soup.select_one('meta[property="og:image"]')
     og_title = soup.select_one('meta[property="og:title"]')
     print(og_title)
-    og_price = soup.select_one('._1LY7DqCnwR').get_text()
+    parent = soup.select_one('span.total-price')  # 해당하는 부모 div 찾기
+    
+    if parent:
+        og_price = parent.select_one('strong').get_text()
+        if og_price:
+            print(og_price)
+        else:
+            print("og_price not found")
+    else:
+        print("Parent div not found")
     
     price_receive = og_price
     image_receive = og_image['content']
